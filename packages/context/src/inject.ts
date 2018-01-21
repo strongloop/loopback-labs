@@ -53,7 +53,7 @@ export interface InjectionMetadata {
    */
   decorator?: string;
   /**
-   * Control if the dependency is optional, default to false
+   * Control if the dependency is optional. Default value: `false`.
    */
   optional?: boolean;
   /**
@@ -499,7 +499,7 @@ export function describeInjectedArguments(
  * JavaScript type
  * @param injection Injection information
  */
-function inspectTargetType(injection: Readonly<Injection>) {
+export function inspectTargetType(injection: Readonly<Injection>) {
   let type = MetadataInspector.getDesignTypeForProperty(
     injection.target,
     injection.member!,

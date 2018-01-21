@@ -103,4 +103,17 @@ export class BindingKey<ValueType> {
       keyWithPath.substr(index + 1),
     );
   }
+
+  static CONFIG_NAMESPACE = '$config';
+  /**
+   * Build a binding key for the configuration of the given binding.
+   * The format is `<key>:$config`
+   *
+   * @param key The binding key that accepts the configuration
+   */
+  static buildKeyForConfig(key: BindingAddress<unknown> = '') {
+    const suffix = BindingKey.CONFIG_NAMESPACE;
+    const bindingKey = key ? `${key}:${suffix}` : suffix;
+    return bindingKey;
+  }
 }
