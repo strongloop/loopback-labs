@@ -1,0 +1,10 @@
+// This is an auto-generated file -- DO NOT EDIT
+
+import {juggler} from '@loopback/repository';
+const dsConfig = require('./<%= jsonFile %>');
+
+export class <%= baseClassName %> extends juggler.DataSource {
+  constructor() {
+    super(dsConfig);
+  }
+}

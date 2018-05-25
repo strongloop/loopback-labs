@@ -20,6 +20,7 @@ const pluralize = require('pluralize');
 const urlSlug = require('url-slug');
 const validate = require('validate-npm-package-name');
 const Conflicter = require('yeoman-generator/lib/util/conflicter');
+const glob = require('glob');
 
 const readdirAsync = promisify(fs.readdir);
 
@@ -40,14 +41,14 @@ function generateValidRegex() {
   const ID_Start = get('Binary_Property/ID_Start');
   const ID_Continue = get('Binary_Property/ID_Continue');
   const compileRegex = _.template(
-    '^(?:<%= identifierStart %>)(?:<%= identifierPart %>)*$',
+    '^(?:<%= identifierStart %>)(?:<%= identifierPart %>)*$'
   );
   const identifierStart = regenerate(ID_Start).add('$', '_');
   const identifierPart = regenerate(ID_Continue).add(
     '$',
     '_',
     '\u200C',
-    '\u200D',
+    '\u200D'
   );
   const regex = compileRegex({
     identifierStart: identifierStart.toString(),
@@ -85,7 +86,7 @@ exports.validateClassName = function(name) {
   if (name.match(/[\/@\s\+%:]/)) {
     return util.format(
       'Class name cannot contain special characters (/@+%: ): %s',
-      name,
+      name
     );
   }
   return util.format('Class name is invalid: %s', name);
@@ -141,7 +142,7 @@ exports.validateUrlSlug = function(name) {
   }
   const separators = ['-', '.', '_', '~', ''];
   const possibleSlugs = separators.map(separator =>
-    urlSlug(name, separator, false),
+    urlSlug(name, separator, false)
   );
   if (!possibleSlugs.includes(name))
     return `Invalid url slug. Suggested slug: ${backslashIfNeeded}${
@@ -215,6 +216,33 @@ exports.getArtifactList = function(dir, artifactType, addSuffix, reader) {
         : exports.toClassName(result);
     });
   });
+};
+
+exports.getArtifactsFromJSON = function(dir, artifactType, properties) {
+  globPattern = `${dir}/**/*${artifactType}.json`;
+
+  if (properties instanceof String) {
+    properties = [properties];
+  }
+
+  return Promise.resolve(
+    glob(globPattern).then(files => {
+      data = [];
+      files.forEach(file => {
+        file = require(file);
+        if (properties) {
+          filteredProps = {};
+          properties.forEach(prop => {
+            filteredProps[prop] = file[prop];
+          });
+          data.push(filteredProps);
+        } else {
+          data.push(file);
+        }
+      });
+      return data;
+    })
+  );
 };
 
 /**

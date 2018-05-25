@@ -1,0 +1,9 @@
+{
+  "name": "test",
+  "connector": "cloudant",
+  "url": "adfdsfsd",
+  "database": "",
+  "username": "etst",
+  "password": "test",
+  "modelIndex": ""
+}

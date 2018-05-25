@@ -35,17 +35,17 @@ module.exports = class ControllerGenerator extends ArtifactGenerator {
     // XXX(kjdelisle): These should be more extensible to allow custom paths
     // for each artifact type.
 
-    this.artifactInfo.outdir = path.resolve(
+    this.artifactInfo.outDir = path.resolve(
       this.artifactInfo.rootDir,
-      'controllers',
+      'controllers'
     );
     this.artifactInfo.modelDir = path.resolve(
       this.artifactInfo.rootDir,
-      'models',
+      'models'
     );
     this.artifactInfo.repositoryDir = path.resolve(
       this.artifactInfo.rootDir,
-      'repositories',
+      'repositories'
     );
 
     this.option('controllerType', {
@@ -106,13 +106,13 @@ module.exports = class ControllerGenerator extends ArtifactGenerator {
         return utils.getArtifactList(
           this.artifactInfo.repositoryDir,
           'repository',
-          true,
+          true
         );
       })
       .then(list => {
         if (_.isEmpty(list)) {
           throw new Error(
-            `No repositories found in ${this.artifactInfo.repositoryDir}`,
+            `No repositories found in ${this.artifactInfo.repositoryDir}`
           );
         }
         repositoryList = list;
@@ -151,7 +151,7 @@ module.exports = class ControllerGenerator extends ArtifactGenerator {
             when: this.artifactInfo.httpPathName === undefined,
             default: answers =>
               utils.prependBackslash(
-                utils.pluralize(utils.urlSlug(answers.modelName)),
+                utils.pluralize(utils.urlSlug(answers.modelName))
               ),
             validate: utils.validateUrlSlug,
             filter: utils.prependBackslash,
@@ -169,7 +169,7 @@ module.exports = class ControllerGenerator extends ArtifactGenerator {
           });
           // Create camel-case names for variables.
           this.artifactInfo.repositoryNameCamel = utils.camelCase(
-            this.artifactInfo.repositoryName,
+            this.artifactInfo.repositoryName
           );
           return props;
         });
@@ -204,7 +204,7 @@ module.exports = class ControllerGenerator extends ArtifactGenerator {
       debug(`Using template at: ${source}`);
     }
     const dest = this.destinationPath(
-      path.join(this.artifactInfo.outdir, this.artifactInfo.filename),
+      path.join(this.artifactInfo.outDir, this.artifactInfo.filename)
     );
 
     if (debug.enabled) {
@@ -216,7 +216,7 @@ module.exports = class ControllerGenerator extends ArtifactGenerator {
       dest,
       this.artifactInfo,
       {},
-      {globOptions: {dot: true}},
+      {globOptions: {dot: true}}
     );
     return;
   }
@@ -233,8 +233,9 @@ module.exports = class ControllerGenerator extends ArtifactGenerator {
       this.log();
       this.log(
         'Controller %s is now created in src/controllers/',
-        this.artifactInfo.name,
+        this.artifactInfo.name
       );
+      super.updateIndexFile();
     }
   }
 };
