@@ -477,7 +477,7 @@ export function describeInjectedArguments(
   if (method === '') {
     // A hacky way to check if an explicit constructor exists
     // See https://github.com/strongloop/loopback-next/issues/1565
-    if (target.toString().match(/\s+constructor\s*\([^\)]*\)\s+\{/m)) {
+    if (target.toString().match(/\{\s*constructor\s*\([^\)]*\)\s*\{/m)) {
       options.ownMetadataOnly = true;
     }
   } else if (target.hasOwnProperty(method)) {
