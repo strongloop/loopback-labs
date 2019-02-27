@@ -167,7 +167,7 @@ describe('Routing metadata for parameters', () => {
     it('reports error if an array parameter type is not Array', () => {
       expect.throws(
         () => {
-          // tslint:disable-next-line:no-unused
+          /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
           class MyController {
             @get('/greet')
             greet(

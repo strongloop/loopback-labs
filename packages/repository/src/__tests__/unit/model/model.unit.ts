@@ -96,7 +96,7 @@ describe('model', () => {
     }
   }
 
-  // tslint:disable-next-line:no-unused
+  /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
   class User extends Entity {
     static definition = userDef;
     id: string;

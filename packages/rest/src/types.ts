@@ -105,7 +105,6 @@ export type OperationArgs = any[];
  * operation results from other "any" typed values.
  */
 export type OperationRetval = any;
-// tslint:enable:no-any
 
 export type GetFromContext = (key: string) => Promise<BoundValue>;
 export type BindElement = (key: string) => Binding;

@@ -41,7 +41,7 @@ describe('HttpCachingProxy', () => {
 
   it('proxies HTTP requests', async function() {
     // Increase the timeout to accomodate slow network connections
-    // tslint:disable-next-line:no-invalid-this
+    /* eslint-disable-next-line no-invalid-this */
     this.timeout(30000);
 
     await givenRunningProxy();
@@ -57,7 +57,7 @@ describe('HttpCachingProxy', () => {
 
   it('proxies HTTPs requests (no tunneling)', async function() {
     // Increase the timeout to accomodate slow network connections
-    // tslint:disable-next-line:no-invalid-this
+    /* eslint-disable-next-line no-invalid-this */
     this.timeout(30000);
 
     await givenRunningProxy();

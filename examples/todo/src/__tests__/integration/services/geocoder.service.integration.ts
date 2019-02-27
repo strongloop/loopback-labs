@@ -13,7 +13,7 @@ import {
 import {GeocoderDataSource} from '../../../datasources/geocoder.datasource';
 
 describe('GeoLookupService', function() {
-  // tslint:disable-next-line:no-invalid-this
+  /* eslint-disable-next-line no-invalid-this */
   this.timeout(30 * 1000);
 
   let cachingProxy: HttpCachingProxy;

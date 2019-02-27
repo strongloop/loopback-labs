@@ -50,7 +50,7 @@ export const aLocation = {
   address: '1 New Orchard Road, Armonk, 10504',
   geopoint: <GeoPoint>{y: 41.109653, x: -73.72467},
   get geostring() {
-    // tslint:disable-next-line:no-invalid-this
+    /* eslint-disable-next-line no-invalid-this */
     return `${this.geopoint.y},${this.geopoint.x}`;
   },
 };

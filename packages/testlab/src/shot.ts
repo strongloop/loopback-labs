@@ -23,7 +23,7 @@ import * as express from 'express';
 
 export {inject, ShotRequestOptions};
 
-// tslint:disable-next-line:variable-name
+// eslint-disable-next-line variable-name
 const ShotRequest: ShotRequestCtor = require('shot/lib/request');
 type ShotRequestCtor = new (options: ShotRequestOptions) => IncomingMessage;
 
@@ -39,7 +39,7 @@ export function stubServerRequest(
   return stub;
 }
 
-// tslint:disable-next-line:variable-name
+// eslint-disable-next-line variable-name
 const ShotResponse: ShotResponseCtor = require('shot/lib/response');
 export type ShotCallback = (response: ResponseObject) => void;
 

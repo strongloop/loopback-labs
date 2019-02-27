@@ -35,7 +35,7 @@ describe('relation repository', () => {
      * interface. The TS Compiler will complain if the interface changes.
      */
 
-    // tslint:disable-next-line:no-unused
+    /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
     class TestHasManyEntityCrudRepository<T extends Entity>
       implements HasManyRepository<T> {
       create(
