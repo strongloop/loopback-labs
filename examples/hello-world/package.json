@@ -46,7 +46,10 @@
     "@loopback/eslint-config": "^1.0.0-1",
     "@types/node": "^10.11.2",
     "eslint": "^5.14.1",
-    "typescript": "^3.3.1"
+    "typescript": "^3.3.1",
+    "@typescript-eslint/eslint-plugin": "^1.4.2",
+    "@typescript-eslint/parser": "^1.4.2",
+    "eslint-plugin-eslint-plugin": "^2.0.1"
   },
   "keywords": [
     "loopback",

@@ -3,6 +3,11 @@
 // This file is licensed under the MIT License.
 // License text available at https://opensource.org/licenses/MIT
 
+/**
+ * Default ESLint configuration for LoopBack
+ *
+ * See https://eslint.org/docs/user-guide/configuring
+ */
 module.exports = {
   root: true,
   parser: '@typescript-eslint/parser',
@@ -24,7 +29,7 @@ module.exports = {
     // TypeScript allows the same name for namespace and function
     'no-redeclare': 'off',
     '@typescript-eslint/indent': 'off',
-    '@typescript-eslint/no-explicit-any': 'off',
+    '@typescript-eslint/no-explicit-any': 'error',
     '@typescript-eslint/no-non-null-assertion': 'off',
     '@typescript-eslint/explicit-function-return-type': 'off',
     '@typescript-eslint/explicit-member-accessibility': 'off',
@@ -35,7 +40,18 @@ module.exports = {
     '@typescript-eslint/no-angle-bracket-type-assertion': 'off',
     '@typescript-eslint/prefer-interface': 'off',
     '@typescript-eslint/no-namespace': 'off',
-    '@typescript-eslint/no-unused-vars': 'off',
+
+    // Disable the base `no-unused-vars` to use `typescript`
+    'no-unused-vars': 'off',
+    '@typescript-eslint/no-unused-vars': [
+      // Turn it off for now before we find out how it applies to decorators
+      'off',
+      {
+        vars: 'all',
+        args: 'none',
+        ignoreRestSiblings: false,
+      },
+    ],
     '@typescript-eslint/ban-types': 'error',
     '@typescript-eslint/no-triple-slash-reference': 'off',
     '@typescript-eslint/no-empty-interface': 'off',
@@ -43,6 +59,7 @@ module.exports = {
   parserOptions: {
     sourceType: 'module',
     ecmaFeatures: {
+      ecmaVersion: 2017,
       jsx: false,
     },
   },
