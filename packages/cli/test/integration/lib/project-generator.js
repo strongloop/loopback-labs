@@ -101,11 +101,11 @@ module.exports = function(projGenerator, props, projectType) {
           );
         });
 
-        it('has tslint option set up', () => {
+        it('has eslint option set up', () => {
           let gen = testUtils.testSetUpGen(projGenerator);
           let helpText = gen.help();
-          assert(helpText.match(/--tslint/));
-          assert(helpText.match(/# Enable tslint/));
+          assert(helpText.match(/--eslint/));
+          assert(helpText.match(/# Enable eslint/));
         });
 
         it('has prettier option set up', () => {
@@ -145,7 +145,7 @@ module.exports = function(projGenerator, props, projectType) {
           name: 'foobar',
           description: null,
           outdir: null,
-          tslint: null,
+          eslint: null,
           prettier: true,
           mocha: null,
           loopbackBuild: null,
@@ -210,7 +210,7 @@ module.exports = function(projGenerator, props, projectType) {
           gen,
           {
             settings: [
-              'Enable tslint',
+              'Enable eslint',
               'Enable prettier',
               'Enable mocha',
               'Enable loopbackBuild',
@@ -220,7 +220,7 @@ module.exports = function(projGenerator, props, projectType) {
           'promptOptions',
         ).then(() => {
           gen.prompt.restore();
-          assert(gen.projectInfo.tslint === true);
+          assert(gen.projectInfo.eslint === true);
           assert(gen.projectInfo.prettier === true);
           assert(gen.projectInfo.mocha === true);
           assert(gen.projectInfo.loopbackBuild === true);
@@ -241,7 +241,7 @@ module.exports = function(projGenerator, props, projectType) {
           '.prettierrc',
           '.gitignore',
           '.npmrc',
-          'tslint.json',
+          '.eslintrc.js',
           'src/index.ts',
           '.vscode/settings.json',
           '.vscode/tasks.json',
@@ -250,11 +250,11 @@ module.exports = function(projGenerator, props, projectType) {
         assert.fileContent([
           ['package.json', '@loopback/build'],
           ['package.json', '"typescript"'],
-          ['package.json', '"tslint"'],
-          ['tslint.json', '@loopback/tslint-config'],
+          ['package.json', '"eslint"'],
+          ['.eslintrc.js', '@loopback/eslint-config'],
           ['tsconfig.json', '@loopback/build'],
         ]);
-        assert.noFileContent([['tslint.json', '"rules"']]);
+        assert.noFileContent([['.eslintrc.js', '"rules"']]);
 
         if (projectType === 'application') {
           assert.fileContent(
@@ -307,7 +307,7 @@ module.exports = function(projGenerator, props, projectType) {
               settings: [
                 // Force Enable loopbackBuild to be unchecked
                 'Disable loopbackBuild',
-                'Enable tslint',
+                'Enable eslint',
                 'Enable prettier',
                 'Enable mocha',
                 'Enable vscode',
@@ -332,15 +332,15 @@ module.exports = function(projGenerator, props, projectType) {
         assert.noFileContent([
           ['package.json', '@loopback/build'],
           ['package.json', '@loopback/dist-util'],
-          ['tslint.json', '@loopback/build'],
+          ['.eslintrc.js', '@loopback/eslint-config'],
           ['tsconfig.json', '@loopback/build'],
         ]);
         assert.fileContent([
           ['package.json', '"clean": "rimraf dist"'],
           ['package.json', '"typescript"'],
-          ['package.json', '"tslint"'],
+          ['package.json', '"eslint"'],
           ['package.json', '"prettier"'],
-          ['tslint.json', '"rules"'],
+          ['.eslintrc.js', "plugins: ['eslint-plugin', '@typescript-eslint']"],
           ['tsconfig.json', '"compilerOptions"'],
           ['tsconfig.json', '"resolveJsonModule": true'],
           ['index.js', "require('./dist')"],
@@ -355,7 +355,7 @@ module.exports = function(projGenerator, props, projectType) {
             {
               settings: [
                 'Enable loopbackBuild',
-                'Enable tslint',
+                'Enable eslint',
                 'Disable prettier', // Force Enable prettier to be unchecked
                 'Enable mocha',
                 'Enable vscode',
@@ -372,14 +372,14 @@ module.exports = function(projGenerator, props, projectType) {
       });
     });
 
-    describe('with tslint disabled', () => {
+    describe('with eslint disabled', () => {
       before(() => {
         return helpers.run(projGenerator).withPrompts(
           Object.assign(
             {
               settings: [
                 'Enable loopbackBuild',
-                'Disable tslint', // Force Enable tslint to be unchecked
+                'Disable eslint', // Force Enable eslint to be unchecked
                 'Enable prettier',
                 'Enable mocha',
                 'Enable vscode',
@@ -391,12 +391,12 @@ module.exports = function(projGenerator, props, projectType) {
       });
 
       it('creates files', () => {
-        assert.noFile(['tslint.json', 'tslint.build.json']);
+        assert.noFile(['.eslintrc.js', 'eslint.build.json']);
         assert.jsonFileContent('package.json', props);
       });
     });
 
-    describe('with loopbackBuild & tslint disabled', () => {
+    describe('with loopbackBuild & eslint disabled', () => {
       before(() => {
         return helpers.run(projGenerator).withPrompts(
           Object.assign(
@@ -404,8 +404,8 @@ module.exports = function(projGenerator, props, projectType) {
               settings: [
                 // Force Enable loopbackBuild to be unchecked
                 'Disable loopbackBuild',
-                // Force Enable tslint to be unchecked
-                'Disable tslint',
+                // Force Enable eslint to be unchecked
+                'Disable eslint',
                 'Enable prettier',
                 'Enable mocha',
                 'Enable vscode',
@@ -418,10 +418,10 @@ module.exports = function(projGenerator, props, projectType) {
 
       it('creates files', () => {
         assert.jsonFileContent('package.json', props);
-        assert.noFile(['tslint.json', 'tslint.build.json']);
+        assert.noFile(['.eslintrc.js', 'eslint.build.json']);
         assert.noFileContent([
           ['package.json', '@loopback/build'],
-          ['package.json', '"tslint"'],
+          ['package.json', '"eslint"'],
           ['tsconfig.json', '@loopback/build'],
         ]);
         assert.fileContent([
@@ -429,7 +429,7 @@ module.exports = function(projGenerator, props, projectType) {
           ['package.json', '"prettier"'],
           ['tsconfig.json', '"compilerOptions"'],
         ]);
-        assert.noFileContent([['package.json', '"tslint"']]);
+        assert.noFileContent([['package.json', '"eslint"']]);
       });
     });
 
@@ -440,7 +440,7 @@ module.exports = function(projGenerator, props, projectType) {
             {
               settings: [
                 'Enable loopbackBuild',
-                'Enable tslint',
+                'Enable eslint',
                 'Enable prettier',
                 'Enable mocha',
                 'Disable vscode', // Force Enable vscode to be unchecked

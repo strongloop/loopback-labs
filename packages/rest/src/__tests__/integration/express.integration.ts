@@ -59,7 +59,7 @@ describe('HttpHandler mounted as an express router', () => {
   let handler: HttpRequestListener;
 
   function givenControllerClass(
-    // tslint:disable-next-line:no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     ctor: new (...args: any[]) => object,
   ) {
     server.controller(ctor);

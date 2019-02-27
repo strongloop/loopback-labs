@@ -44,7 +44,7 @@ export function instantiateClass<T>(
   ctor: Constructor<T>,
   ctx: Context,
   session?: ResolutionSession,
-  // tslint:disable-next-line:no-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   nonInjectedArgs?: any[],
 ): ValueOrPromise<T> {
   /* istanbul ignore if */
@@ -140,7 +140,7 @@ export function resolveInjectedArguments(
   method: string,
   ctx: Context,
   session?: ResolutionSession,
-  // tslint:disable-next-line:no-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   nonInjectedArgs?: any[],
 ): ValueOrPromise<BoundValue[]> {
   /* istanbul ignore if */
@@ -217,7 +217,7 @@ export function invokeMethod(
   target: object,
   method: string,
   ctx: Context,
-  // tslint:disable-next-line:no-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   nonInjectedArgs?: any[],
 ): ValueOrPromise<BoundValue> {
   const methodName = getTargetName(target, method);

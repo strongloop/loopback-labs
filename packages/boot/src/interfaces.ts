@@ -71,7 +71,7 @@ export type BootOptions = {
   /**
    * Additional Properties
    */
-  // tslint:disable-next-line:no-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   [prop: string]: any;
 };
 
@@ -96,7 +96,7 @@ export type BootExecutionOptions = {
   /**
    * Additional Properties
    */
-  // tslint:disable-next-line:no-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   [prop: string]: any;
 };
 

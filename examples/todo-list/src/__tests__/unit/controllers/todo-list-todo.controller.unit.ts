@@ -151,7 +151,7 @@ describe('TodoController', () => {
       .withArgs(aTodoListWithId.id!)
       .returns(constrainedTodoRepo);
 
-    // tslint:disable-next-line:no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (todoListRepo as any).todos = todos;
 
     // Setup CRUD fakes

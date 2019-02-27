@@ -86,7 +86,7 @@ function convertToJsonSchema(openapiSchema: SchemaObject) {
 const compiledSchemaCache = new WeakMap();
 
 function validateValueAgainstSchema(
-  // tslint:disable-next-line:no-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   body: any,
   schema: SchemaObject | ReferenceObject,
   globalSchemas?: SchemasObject,

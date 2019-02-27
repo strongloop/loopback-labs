@@ -117,7 +117,7 @@ export enum BindingType {
   PROVIDER = 'Provider',
 }
 
-// tslint:disable-next-line:no-any
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type TagMap = MapObject<any>;
 
 /**
@@ -456,7 +456,7 @@ export class Binding<T = BoundValue> {
   }
 
   toJSON(): Object {
-    // tslint:disable-next-line:no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const json: {[name: string]: any} = {
       key: this.key,
       scope: this.scope,

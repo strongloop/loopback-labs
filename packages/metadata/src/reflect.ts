@@ -5,7 +5,7 @@
 
 import 'reflect-metadata';
 
-/* tslint:disable:no-any */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/ban-types */
 
 /*
@@ -162,7 +162,7 @@ export class NamespacedReflect {
     }
   }
 
-  /* tslint:disable-next-line:no-any */
+  /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
   metadata(
     metadataKey: string,
     metadataValue: any,

@@ -24,6 +24,8 @@ interface Object {
 }
 */
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 interface ShouldAssertion {
   // basic grammar
   a: ShouldAssertion;

@@ -663,7 +663,7 @@ describe('HttpHandler', () => {
   }
 
   function givenControllerClass(
-    // tslint:disable-next-line:no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     ctor: new (...args: any[]) => object,
     spec: ControllerSpec,
   ) {

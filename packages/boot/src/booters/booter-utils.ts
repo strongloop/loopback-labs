@@ -31,7 +31,7 @@ export async function discoverFiles(
  * @param target The function to check if it's a class or not.
  * @returns {boolean} True if target is a class. False otherwise.
  */
-// tslint:disable-next-line:no-any
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function isClass(target: any): target is Constructor<any> {
   return (
     typeof target === 'function' && target.toString().indexOf('class') === 0

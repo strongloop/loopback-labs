@@ -39,7 +39,7 @@ describe('app-generator (SLOW)', function() {
     // WARNING: It takes a while to run `lerna bootstrap`
     this.timeout(15 * 60 * 1000);
     process.chdir(rootDir);
-    await lernaBootstrap(appName);
+    await lernaBootstrap([appName, '@loopback/eslint-config']);
   });
 
   it('passes `npm test` for the generated project', function() {

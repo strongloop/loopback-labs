@@ -10,7 +10,7 @@ import {expect, sinon} from '@loopback/testlab';
 
 describe('rpcRouter', () => {
   describe('routeHandler', () => {
-    // tslint:disable-next-line:no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let server: any;
     let request: express.Request;
     let response: express.Response;
@@ -52,7 +52,7 @@ describe('rpcRouter', () => {
     it('throws 500 on unhandled error', async () => {
       server.get.resolves(
         new class extends FakeController {
-          // tslint:disable-next-line:no-any
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           getFoo(input: any): string {
             throw new Error('>:(');
           }
@@ -98,7 +98,7 @@ describe('rpcRouter', () => {
   }
 
   class FakeController {
-    // tslint:disable-next-line:no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     getFoo(input: any) {
       return `Hello, ${input.name}!`;
     }

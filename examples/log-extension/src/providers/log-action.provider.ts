@@ -37,7 +37,7 @@ export class LogActionProvider implements Provider<LogFn> {
     const fn = <LogFn>((
       req: Request,
       args: OperationArgs,
-      // tslint:disable-next-line:no-any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       result: any,
       start?: HighResTime,
     ) => {
@@ -54,7 +54,7 @@ export class LogActionProvider implements Provider<LogFn> {
   private async action(
     req: Request,
     args: OperationArgs,
-    // tslint:disable-next-line:no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     result: any,
     start?: HighResTime,
   ): Promise<void> {

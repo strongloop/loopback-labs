@@ -19,7 +19,7 @@ import {juggler} from '../repositories/legacy-juggler-bridge';
 export type RepositoryDecorator = (
   target: Object,
   key?: string,
-  // tslint:disable-next-line:no-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   descriptorOrIndex?: TypedPropertyDescriptor<any> | number,
 ) => void;
 
@@ -149,7 +149,7 @@ export function repository(
   return function(
     target: Object,
     key?: string,
-    // tslint:disable-next-line:no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     descriptorOrIndex?: TypedPropertyDescriptor<any> | number,
   ) {
     if (key || typeof descriptorOrIndex === 'number') {

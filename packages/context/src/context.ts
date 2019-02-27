@@ -26,7 +26,7 @@ import {BoundValue, getDeepProperty, isPromiseLike} from './value-promise';
  * See https://www.typescriptlang.org/docs/handbook/release-notes/typescript-2-3.html
  */
 if (!Symbol.asyncIterator) {
-  // tslint:disable-next-line:no-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   (Symbol as any).asyncIterator = Symbol.for('Symbol.asyncIterator');
 }
 // This import must happen after the polyfill
@@ -63,7 +63,7 @@ export class Context extends EventEmitter {
   protected _parentEventListeners:
     | Map<
         string,
-        // tslint:disable-next-line:no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (...args: any[]) => void
       >
     | undefined;
@@ -120,7 +120,7 @@ export class Context extends EventEmitter {
    * as the prefix
    * @param args Arguments for the debug
    */
-  // tslint:disable-next-line:no-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private _debug(...args: any[]) {
     /* istanbul ignore if */
     if (!debug.enabled) return;

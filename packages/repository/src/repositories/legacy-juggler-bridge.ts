@@ -61,7 +61,7 @@ export function bindModel<T extends juggler.ModelBaseClass>(
  * Ensure the value is a promise
  * @param p Promise or void
  */
-/* tslint:disable-next-line:no-any */
+/* eslint-disable-next-line @typescript-eslint/no-explicit-any */
 export function ensurePromise<T>(p: legacy.PromiseOrVoid<T>): Promise<T> {
   if (p && isPromiseLike(p)) {
     // Juggler uses promise-like Bluebird instead of native Promise
@@ -407,7 +407,7 @@ export class DefaultCrudRepository<T extends Entity, ID>
 
   async execute(
     command: Command,
-    // tslint:disable:no-any
+    /* eslint-disable @typescript-eslint/no-explicit-any */
     parameters: NamedParameters | PositionalParameters,
     options?: Options,
   ): Promise<AnyObject> {

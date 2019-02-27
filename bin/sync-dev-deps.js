@@ -27,10 +27,10 @@ async function syncDevDeps() {
 
   const masterDeps = {
     typescript: buildDeps.typescript,
-    tslint: buildDeps.tslint,
+    eslint: buildDeps.eslint,
   };
 
-  // Update typescript & tslint dependencies in individual packages
+  // Update typescript & eslint dependencies in individual packages
   for (const pkg of packages) {
     const data = readJsonFile(pkg.manifestLocation);
     let modified = false;

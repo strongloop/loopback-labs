@@ -6,7 +6,7 @@
 import {Type} from './type';
 import * as util from 'util';
 
-// tslint:disable:no-any
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 /**
  * Array type, such as string[]

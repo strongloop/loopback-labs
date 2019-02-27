@@ -82,7 +82,7 @@ export type LogError = (
   request: Request,
 ) => void;
 
-// tslint:disable:no-any
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 /**
  * Options for request body parsing

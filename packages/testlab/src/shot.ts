@@ -8,7 +8,7 @@
  * https://github.com/hapijs/shot
  */
 
-// tslint:disable:no-any
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import {IncomingMessage, ServerResponse} from 'http';
 import * as util from 'util';

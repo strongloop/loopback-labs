@@ -16,7 +16,7 @@ import {Type} from './types';
  * See https://en.wikipedia.org/wiki/Domain-driven_design#Building_blocks
  */
 
-// tslint:disable:no-any
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 export type PropertyType =
   | string

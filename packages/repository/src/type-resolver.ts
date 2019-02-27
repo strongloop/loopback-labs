@@ -36,7 +36,7 @@ export type TypeResolver<
  * @param fn The value to check.
  */
 export function isTypeResolver<T extends object>(
-  // tslint:disable-next-line:no-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   fn: any,
 ): fn is TypeResolver<T> {
   // 1. A type provider must be a function

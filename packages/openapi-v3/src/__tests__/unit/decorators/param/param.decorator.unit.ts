@@ -185,7 +185,7 @@ describe('Routing metadata for parameters', () => {
         @get('/greet')
         greet(
           @param.array('names', 'query', {type: 'string'})
-          names: /* tslint:disable-next-line:no-any */
+          names: /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
           any,
         ) {}
       }

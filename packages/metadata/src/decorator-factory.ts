@@ -9,7 +9,7 @@ import * as debugModule from 'debug';
 import {MetadataMap, DecoratorType, MetadataKey} from './types';
 const debug = debugModule('loopback:metadata:decorator');
 
-// tslint:disable:no-any
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/ban-types */
 
 /**
