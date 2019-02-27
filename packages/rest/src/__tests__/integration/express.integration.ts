@@ -60,7 +60,7 @@ describe('HttpHandler mounted as an express router', () => {
 
   function givenControllerClass(
     // tslint:disable-next-line:no-any
-    ctor: new (...args: any[]) => Object,
+    ctor: new (...args: any[]) => object,
   ) {
     server.controller(ctor);
   }

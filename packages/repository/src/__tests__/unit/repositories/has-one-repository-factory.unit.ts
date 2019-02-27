@@ -94,10 +94,10 @@ describe('createHasOneRepositoryFactory', () => {
       .addProperty('province', {
         type: 'string',
       });
-    street: String;
-    zipcode: String;
-    city: String;
-    province: String;
+    street: string;
+    zipcode: string;
+    city: string;
+    province: string;
   }
   class Customer extends Entity {
     static definition = new ModelDefinition('Customer').addProperty('id', {

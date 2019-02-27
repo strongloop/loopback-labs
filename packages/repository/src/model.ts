@@ -8,6 +8,8 @@ import {RelationMetadata} from './relations';
 import {TypeResolver} from './type-resolver';
 import {Type} from './types';
 
+/* eslint-disable @typescript-eslint/ban-types */
+
 /**
  * This module defines the key classes representing building blocks for Domain
  * Driven Design.
@@ -19,7 +21,7 @@ import {Type} from './types';
 export type PropertyType =
   | string
   | Function
-  | Object
+  | object
   | Type<any>
   | TypeResolver<Model>;
 

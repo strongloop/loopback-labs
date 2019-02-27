@@ -60,7 +60,7 @@ describe('RestComponent', () => {
 
       // tslint:disable-next-line:max-line-length
       it('can be customized by extending RestComponent', async () => {
-        let lastLog: string = 'logError() was not called';
+        let lastLog = 'logError() was not called';
 
         class CustomRestComponent extends RestComponent {
           providers: ProviderMap = {

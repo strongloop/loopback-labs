@@ -42,13 +42,13 @@ function generateValidRegex() {
   const get = function(what) {
     return require('unicode-10.0.0/' + what + '/code-points.js');
   };
-  const ID_Start = get('Binary_Property/ID_Start');
-  const ID_Continue = get('Binary_Property/ID_Continue');
+  const idStart = get('Binary_Property/ID_Start');
+  const idContinue = get('Binary_Property/ID_Continue');
   const compileRegex = _.template(
     '^(?:<%= identifierStart %>)(?:<%= identifierPart %>)*$',
   );
-  const identifierStart = regenerate(ID_Start).add('$', '_');
-  const identifierPart = regenerate(ID_Continue).add(
+  const identifierStart = regenerate(idStart).add('$', '_');
+  const identifierPart = regenerate(idContinue).add(
     '$',
     '_',
     '\u200C',

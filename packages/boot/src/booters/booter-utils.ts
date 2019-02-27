@@ -51,7 +51,7 @@ export function loadClassesFromFiles(
   files: string[],
   projectRootDir: string,
 ): Constructor<{}>[] {
-  const classes: Array<Constructor<{}>> = [];
+  const classes: Constructor<{}>[] = [];
   for (const file of files) {
     debug('Loading artifact file %j', path.relative(projectRootDir, file));
     const moduleObj = require(file);

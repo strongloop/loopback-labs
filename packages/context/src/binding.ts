@@ -20,6 +20,8 @@ import {
 
 const debug = debugModule('loopback:context:binding');
 
+/* eslint-disable @typescript-eslint/ban-types */
+
 /**
  * Scope for binding values
  */

@@ -196,7 +196,7 @@ function buildMethodSpec(controllerSpec, op, options) {
   const paramNames = {};
   if (parameters) {
     args = parameters.map(p => {
-      const name = escapeIdentifier(p.name);
+      let name = escapeIdentifier(p.name);
       if (name in paramNames) {
         name = `${name}${paramNames[name]++}`;
       } else {

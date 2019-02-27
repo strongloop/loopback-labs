@@ -52,9 +52,9 @@ export function bindModel<T extends juggler.ModelBaseClass>(
   modelClass: T,
   ds: juggler.DataSource,
 ): T {
-  const boundModelClass = class extends modelClass {};
-  boundModelClass.attachTo(ds);
-  return boundModelClass;
+  const BoundModelClass = class extends modelClass {};
+  BoundModelClass.attachTo(ds);
+  return BoundModelClass;
 }
 
 /**

@@ -93,8 +93,8 @@ describe('DefaultCrudRepository', () => {
       });
 
       created: Date;
-      toBuy: String[];
-      toVisit: String[];
+      toBuy: string[];
+      toVisit: string[];
     }
 
     it('converts PropertyDefinition with array type', () => {

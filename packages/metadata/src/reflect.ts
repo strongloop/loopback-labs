@@ -6,6 +6,7 @@
 import 'reflect-metadata';
 
 /* tslint:disable:no-any */
+/* eslint-disable @typescript-eslint/ban-types */
 
 /*
  * namespaced wrapper to handle reflect api

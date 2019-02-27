@@ -120,7 +120,7 @@ export class Application extends Context {
    * @memberof Application
    */
   public async getServer<T extends Server>(
-    target: Constructor<T> | String,
+    target: Constructor<T> | string,
   ): Promise<T> {
     let key: string;
     // instanceof check not reliable for string.

@@ -80,6 +80,7 @@ export class LogActionProvider implements Provider<LogFn> {
       if (start) {
         const timeDiff: HighResTime = this.timer(start);
         const time: number =
+          // eslint-disable-next-line no-mixed-operators
           timeDiff[0] * 1000 + Math.round(timeDiff[1] * 1e-4) / 100;
         msg = `${time}ms: ${msg}`;
       }

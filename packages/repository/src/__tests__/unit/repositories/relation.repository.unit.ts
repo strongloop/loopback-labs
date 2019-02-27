@@ -36,7 +36,7 @@ describe('relation repository', () => {
      */
 
     // tslint:disable-next-line:no-unused
-    class testHasManyEntityCrudRepository<T extends Entity>
+    class TestHasManyEntityCrudRepository<T extends Entity>
       implements HasManyRepository<T> {
       create(
         targetModelData: DataObject<T>,

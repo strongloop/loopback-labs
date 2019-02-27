@@ -15,7 +15,6 @@ const tsArtifact = {
   CallExpression: 'CallExpression',
   ObjectLiteralExpression: 'ObjectLiteralExpression',
   PropertyAssignment: 'PropertyAssignment',
-  PropertyDeclaration: 'PropertyDeclaration',
   TrueKeywordTrue: 'TrueKeyword[value="true"]',
   // the following are placed in case it is needed to explore more artifacts
   IfStatement: 'IfStatement',

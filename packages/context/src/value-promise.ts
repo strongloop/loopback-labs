@@ -231,6 +231,7 @@ export function resolveUntil<T, V>(
   evaluator: (sourceVal: T, targetVal: V | undefined) => boolean,
 ): ValueOrPromise<V | undefined> {
   // Do iteration in loop for synchronous values to avoid stack overflow
+  // eslint-disable-next-line no-constant-condition
   while (true) {
     const next = source.next();
     if (next.done) return undefined; // End of the iterator

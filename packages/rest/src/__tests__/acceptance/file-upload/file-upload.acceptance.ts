@@ -76,7 +76,7 @@ describe('multipart/form-data', () => {
       })
       request: Request,
       @inject(RestBindings.Http.RESPONSE) response: Response,
-    ): Promise<Object> {
+    ): Promise<object> {
       const storage = multer.memoryStorage();
       const upload = multer({storage});
       return new Promise<object>((resolve, reject) => {

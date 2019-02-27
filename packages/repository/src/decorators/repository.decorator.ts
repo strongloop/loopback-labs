@@ -11,6 +11,8 @@ import {Entity, Model} from '../model';
 import {DefaultCrudRepository, Repository} from '../repositories';
 import {juggler} from '../repositories/legacy-juggler-bridge';
 
+/* eslint-disable @typescript-eslint/ban-types */
+
 /**
  * Type definition for decorators returned by `@repository` decorator factory
  */

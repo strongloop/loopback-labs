@@ -10,6 +10,8 @@ import {MetadataMap, DecoratorType, MetadataKey} from './types';
 const debug = debugModule('loopback:metadata:decorator');
 
 // tslint:disable:no-any
+/* eslint-disable @typescript-eslint/ban-types */
+
 /**
  * Options for a decorator
  */

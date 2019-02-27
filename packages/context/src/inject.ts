@@ -32,6 +32,8 @@ const PROPERTIES_KEY = MetadataAccessor.create<Injection, PropertyDecorator>(
   'inject:properties',
 );
 
+/* eslint-disable @typescript-eslint/ban-types */
+
 /**
  * A function to provide resolution of injected values
  */

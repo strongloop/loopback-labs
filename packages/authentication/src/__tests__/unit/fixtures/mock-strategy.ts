@@ -11,9 +11,9 @@ import {Request} from 'express';
  */
 export class MockStrategy extends Strategy {
   // user to return for successful authentication
-  private mockUser: Object;
+  private mockUser: object;
 
-  setMockUser(userObj: Object) {
+  setMockUser(userObj: object) {
     this.mockUser = userObj;
   }
 
