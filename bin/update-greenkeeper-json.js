@@ -64,6 +64,12 @@ async function updateGreenKeeperJson() {
     return;
   }
 
+  // Keep other settings than `groups`
+  for (const p in currentConfig) {
+    if (p === 'groups') continue;
+    greenKeeperJson[p] = currentConfig[p];
+  }
+
   if (process.argv[2] === '-f') {
     // Update `greenkeeper.json`
     writeJsonFile(greenKeeperJsonFile, greenKeeperJson);
