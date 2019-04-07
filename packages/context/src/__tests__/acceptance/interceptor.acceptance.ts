@@ -6,6 +6,7 @@
 import {expect} from '@loopback/testlab';
 import {
   Context,
+  ContextTags,
   inject,
   intercept,
   Interceptor,
@@ -216,6 +217,91 @@ describe('Interceptor', () => {
         'log: after-greetStaticWithDI',
       ]);
     });
+  });
+
+  context('global interceptors', () => {
+    beforeEach(givenGlobalInterceptor);
+
+    it('invokes sync and async interceptors', async () => {
+      const msg = await invokeMethodWithInterceptors(
+        ctx,
+        controllerWithClassInterceptors,
+        'greetSync',
+        ['John'],
+      );
+      expect(msg).to.equal('Hello, John');
+      expect(events).to.eql([
+        'globalLog: before-greetSync',
+        'log: before-greetSync',
+        'logSync: before-greetSync',
+        'logSync: after-greetSync',
+        'log: after-greetSync',
+        'globalLog: after-greetSync',
+      ]);
+    });
+
+    it('invokes async interceptors on an async method', async () => {
+      const msg = await invokeMethodWithInterceptors(
+        ctx,
+        controllerWithClassInterceptors,
+        'greet',
+        ['John'],
+      );
+      expect(msg).to.equal('Hello, JOHN');
+      expect(events).to.eql([
+        'globalLog: before-greet',
+        'convertName: before-greet',
+        'log: before-greet',
+        'log: after-greet',
+        'convertName: after-greet',
+        'globalLog: after-greet',
+      ]);
+    });
+
+    it('invokes interceptors on a static method', async () => {
+      const msg = await invokeMethodWithInterceptors(
+        ctx,
+        MyControllerWithClassLevelInterceptors,
+        'greetStatic',
+        ['John'],
+      );
+      expect(msg).to.equal('Hello, John');
+      expect(events).to.eql([
+        'globalLog: before-greetStatic',
+        'log: before-greetStatic',
+        'log: after-greetStatic',
+        'globalLog: after-greetStatic',
+      ]);
+    });
+
+    it('invokes interceptors on a static method with DI', async () => {
+      ctx.bind('name').to('John');
+      const msg = await invokeMethod(
+        MyControllerWithClassLevelInterceptors,
+        'greetStaticWithDI',
+        ctx,
+      );
+      expect(msg).to.equal('Hello, John');
+      expect(events).to.eql([
+        'globalLog: before-greetStaticWithDI',
+        'log: before-greetStaticWithDI',
+        'log: after-greetStaticWithDI',
+        'globalLog: after-greetStaticWithDI',
+      ]);
+    });
+
+    function givenGlobalInterceptor() {
+      const globalLog: Interceptor = async (invocationCtx, next) => {
+        events.push('globalLog: before-' + invocationCtx.methodName);
+        const result = await next();
+        events.push('globalLog: after-' + invocationCtx.methodName);
+        return result;
+      };
+      ctx
+        .bind('globalLog')
+        .to(globalLog)
+        .tag(ContextTags.INTERCEPTOR);
+    }
   });
 
   let events: string[];

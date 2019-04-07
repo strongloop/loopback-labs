@@ -147,7 +147,7 @@ Interceptors form a cascading chain of handlers around the target method
 invocation. We can apply interceptors by decorating methods/classes with
 `@intercept`.
 
-## @intercept
+### @intercept
 
 Syntax: `@intercept(...interceptorFunctionsOrBindingKeys)`
 
@@ -257,7 +257,8 @@ class MyControllerWithClassLevelInterceptors {
     return `Hello, ${name}`;
   }
 
-  @intercept(log, logSync)
+  @intercept(log)
+  @intercept(logSync)
   greetSync(name: string) {
     return `Hello, ${name}`;
   }
@@ -269,12 +270,35 @@ class MyControllerWithClassLevelInterceptors {
 }
 ```
 
-Here is the list of interceptors invoked for each method:
+### Global interceptors
 
-- greetStatic: `log`
-- greetStaticWithDI: `log`
-- greetSync: `log`, `logSync`
-- greet: `convertName`, `log`
+Global interceptors are discovered from the `InvocationContext`. They are
+registered as bindings with `interceptor` tag. For example,
+
+```ts
+app
+  .bind('interceptors.MetricsInterceptor')
+  .toProvider(MetricsInterceptorProvider)
+  .tag('interceptor');
+```
+
+### Order of invocation for interceptors
+
+Multiple `@intercept` decorators can be applied to a class or a method. The
+order of invocation is determined by how `@intercept` is specified. The list of
+interceptors is created from top to bottom and from left to right. Duplicate
+entries are removed from their first occurrences.
+
+Here is the list of interceptors invoked for each method on
+`MyControllerWithClassLevelInterceptors`.
+
+- greetStatic: `log` (from the class)
+- greetStaticWithDI: `log` (from the method, class level `log` is removed)
+- greetSync: `log`, `logSync` (from the method, method level `log` is preserved
+  and class level `log` is removed)
+- greet: `convertName`, `log` (from the method, method level `log` is preserved
+  and class level `log` is removed. This allows a method to explicitly control
+  the order.)
 
 ## Invoke a method with interceptors
 

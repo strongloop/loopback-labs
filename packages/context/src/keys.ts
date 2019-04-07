@@ -23,4 +23,9 @@ export namespace ContextTags {
    * Binding key for the artifact
    */
   export const KEY = 'key';
+
+  /**
+   * Binding tag for global interceptors
+   */
+  export const INTERCEPTOR = 'interceptor';
 }

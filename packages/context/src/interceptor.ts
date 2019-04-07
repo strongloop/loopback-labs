@@ -13,8 +13,11 @@ import {
 } from '@loopback/metadata';
 import * as assert from 'assert';
 import * as debugFactory from 'debug';
+import {filterByTag} from './binding-filter';
 import {BindingAddress} from './binding-key';
 import {Context} from './context';
+import {ContextView} from './context-view';
+import {ContextTags} from './keys';
 import {transformValueOrPromise, ValueOrPromise} from './value-promise';
 const debug = debugFactory('loopback:context:intercept');
 const getTargetName = DecoratorFactory.getTargetName;
@@ -41,6 +44,22 @@ export class InvocationContext extends Context {
     public readonly args: any[],
   ) {
     super(parent);
+  }
+
+  getGlobalInterceptors() {
+    const view = new ContextView<Interceptor>(
+      this,
+      filterByTag(ContextTags.INTERCEPTOR),
+    );
+    return view.values();
+  }
+
+  getGlobalInterceptorKeys() {
+    const view = new ContextView<Interceptor>(
+      this,
+      filterByTag(ContextTags.INTERCEPTOR),
+    );
+    return view.bindings.map(b => b.key);
   }
 }
 
@@ -213,6 +232,11 @@ export function invokeMethodWithInterceptors(
 
   // Inserting class level interceptors before method level ones
   interceptors = mergeInterceptors(classInterceptors, interceptors);
+
+  const globalInterceptors = invocationCtx.getGlobalInterceptorKeys();
+
+  // Inserting global interceptors
+  interceptors = mergeInterceptors(globalInterceptors, interceptors);
 
   return invokeInterceptors(invocationCtx, interceptors);
 }
