@@ -13,6 +13,7 @@ import {
 } from '@loopback/metadata';
 import * as assert from 'assert';
 import * as debugFactory from 'debug';
+import {Binding} from './binding';
 import {filterByTag} from './binding-filter';
 import {BindingAddress} from './binding-key';
 import {Context} from './context';
@@ -46,21 +47,25 @@ export class InvocationContext extends Context {
     super(parent);
   }
 
-  getGlobalInterceptors() {
-    const view = new ContextView<Interceptor>(
-      this,
-      filterByTag(ContextTags.INTERCEPTOR),
-    );
-    return view.values();
-  }
-
-  getGlobalInterceptorKeys() {
+  /**
+   * Discover all binding keys for global interceptors
+   */
+  getGlobalInterceptorBindingKeys() {
     const view = new ContextView<Interceptor>(
       this,
       filterByTag(ContextTags.INTERCEPTOR),
     );
     return view.bindings.map(b => b.key);
   }
+}
+
+/**
+ * The `BindingTemplate` function to configure a binding as a global interceptor
+ * by tagging it with `ContextTags.INTERCEPTOR`
+ * @param binding Binding object
+ */
+export function asInterceptor(binding: Binding<unknown>) {
+  return binding.tag(ContextTags.INTERCEPTOR);
 }
 
 /**
@@ -157,9 +162,24 @@ class InterceptMethodDecoratorFactory extends MethodDecoratorFactory<
 }
 
 /**
- * Decorator function for methods to be intercepted
- * @param interceptorOrKeys One or more interceptors or binding keys that are resolved
- * to be interceptors
+ * Decorator function `@intercept` for classes/methods to apply interceptors. It
+ * can be applied on a class and its public methods. Multiple occurrences of
+ * `@intercept` are allowed on the same target class or method. The decorator
+ * takes a list of `interceptor` functions or binding keys. For example:
+ *
+ * ```ts
+ * @intercept(log, metrics)
+ * class MyController {
+ *   @intercept('caching-interceptor')
+ *   @intercept('name-validation-interceptor')
+ *   greet(name: string) {
+ *     return `Hello, ${name}`;
+ *   }
+ * }
+ * ```
+ *
+ * @param interceptorOrKeys One or more interceptors or binding keys that are
+ * resolved to be interceptors
  */
 export function intercept(...interceptorOrKeys: InterceptorOrKey[]) {
   return function interceptDecoratorForClassOrMethod(
@@ -233,7 +253,7 @@ export function invokeMethodWithInterceptors(
   // Inserting class level interceptors before method level ones
   interceptors = mergeInterceptors(classInterceptors, interceptors);
 
-  const globalInterceptors = invocationCtx.getGlobalInterceptorKeys();
+  const globalInterceptors = invocationCtx.getGlobalInterceptorBindingKeys();
 
   // Inserting global interceptors
   interceptors = mergeInterceptors(globalInterceptors, interceptors);
@@ -259,6 +279,7 @@ function invokeInterceptors(
         typeof targetWithMethods[context.methodName] === 'function',
         `Method ${context.methodName} not found`,
       );
+      /* istanbul ignore if */
       if (debug.enabled) {
         debug(
           'Invoking method %s',
@@ -280,6 +301,7 @@ function invokeInterceptors(
       interceptorFn = interceptor;
     }
     return transformValueOrPromise(interceptorFn, fn => {
+      /* istanbul ignore if */
       if (debug.enabled) {
         debug(
           'Invoking interceptor %d on %s',
