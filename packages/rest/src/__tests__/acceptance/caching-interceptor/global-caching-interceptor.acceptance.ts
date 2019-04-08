@@ -3,7 +3,8 @@
 // This file is licensed under the MIT License.
 // License text available at https://opensource.org/licenses/MIT
 
-import {intercept} from '@loopback/context';
+import {asInterceptor} from '@loopback/context';
+import {anOperationSpec} from '@loopback/openapi-spec-builder';
 import {get, param} from '@loopback/openapi-v3';
 import {
   Client,
@@ -13,14 +14,13 @@ import {
 } from '@loopback/testlab';
 import {RestApplication} from '../../..';
 import {
-  cache,
   cachedResults,
   CachingInterceptorProvider,
   clearCache,
   status,
 } from './caching-interceptor';
 
-describe('caching interceptor', () => {
+describe('global caching interceptor', () => {
   let client: Client;
   let app: RestApplication;
 
@@ -29,7 +29,7 @@ describe('caching interceptor', () => {
     await app.stop();
   });
 
-  context('toUpperCase with bound caching interceptor', () => {
+  context('toUpperCase', () => {
     it('invokes the controller method if not cached', async () => {
       await client.get('/toUpperCase/Hello').expect(200, 'HELLO');
       expect(status.returnFromCache).to.be.false();
@@ -49,31 +49,63 @@ describe('caching interceptor', () => {
     });
   });
 
-  context('toLowerCase with cache interceptor function', () => {
-    it('invokes the controller method if not cached', async () => {
+  context('toLowerCase', () => {
+    it('invokes the handler function if not cached', async () => {
       await client.get('/toLowerCase/Hello').expect(200, 'hello');
       expect(status.returnFromCache).to.be.false();
     });
 
-    it('returns from cache without invoking the controller method', async () => {
+    it('returns from cache without invoking the handler function', async () => {
       for (let i = 0; i <= 5; i++) {
         await client.get('/toLowerCase/Hello').expect(200, 'hello');
         expect(status.returnFromCache).to.be.true();
       }
     });
 
-    it('invokes the controller method after cache is cleared', async () => {
+    it('invokes the handler function after cache is cleared', async () => {
       cachedResults.clear();
       await client.get('/toLowerCase/Hello').expect(200, 'hello');
       expect(status.returnFromCache).to.be.false();
     });
   });
 
+  /**
+   * OpenAPI operation spec for `toLowerCase(text: string)`
+   */
+  const toLowerCaseOperationSpec = anOperationSpec()
+    .withOperationName('toLowerCase')
+    .withParameter({
+      name: 'text',
+      in: 'path',
+      schema: {
+        type: 'string',
+      },
+    })
+    .withStringResponse()
+    .build();
+
+  /**
+   * A plain function to convert `text` to lower case
+   * @param text
+   */
+  function toLowerCase(text: string) {
+    return text.toLowerCase();
+  }
+
   async function givenAClient() {
     clearCache();
     app = new RestApplication({rest: givenHttpServerConfig()});
-    app.bind('caching-interceptor').toProvider(CachingInterceptorProvider);
+    app
+      .bind('caching-interceptor')
+      .toProvider(CachingInterceptorProvider)
+      .apply(asInterceptor);
     app.controller(StringCaseController);
+    app.route(
+      'get',
+      '/toLowerCase/{text}',
+      toLowerCaseOperationSpec,
+      toLowerCase,
+    );
     await app.start();
     client = createRestAppClient(app);
   }
@@ -82,16 +114,9 @@ describe('caching interceptor', () => {
    * A controller using interceptors for caching
    */
   class StringCaseController {
-    @intercept('caching-interceptor')
     @get('/toUpperCase/{text}')
     toUpperCase(@param.path.string('text') text: string) {
       return text.toUpperCase();
-    }
-
-    @intercept(cache)
-    @get('/toLowerCase/{text}')
-    toLowerCase(@param.path.string('text') text: string) {
-      return text.toLowerCase();
     }
   }
 });
