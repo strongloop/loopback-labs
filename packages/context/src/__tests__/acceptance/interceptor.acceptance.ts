@@ -7,6 +7,7 @@ import {expect} from '@loopback/testlab';
 import {
   asInterceptor,
   Context,
+  createProxyWithInterceptors,
   inject,
   intercept,
   Interceptor,
@@ -235,6 +236,75 @@ describe('Interceptor', () => {
       expect(events).to.eql([
         'log: before-greetStaticWithDI',
         'log: after-greetStaticWithDI',
+      ]);
+    });
+  });
+
+  context('proxy with interceptors', () => {
+    it('invokes async interceptors on an async method', async () => {
+      const proxy = createProxyWithInterceptors(
+        controllerWithClassInterceptors,
+        ctx,
+      );
+      const msg = await proxy.greet('John');
+      expect(msg).to.equal('Hello, JOHN');
+      expect(events).to.eql([
+        'convertName: before-greet',
+        'log: before-greet',
+        'log: after-greet',
+        'convertName: after-greet',
+      ]);
+    });
+
+    it('invokes interceptors on a static method', async () => {
+      ctx.bind('name').to('John');
+      const proxy = createProxyWithInterceptors(
+        MyControllerWithClassLevelInterceptors,
+        ctx,
+      );
+      const msg = await proxy.greetStatic('John');
+      expect(msg).to.equal('Hello, John');
+      expect(events).to.eql([
+        'log: before-greetStatic',
+        'log: after-greetStatic',
+      ]);
+    });
+
+    it('supports asProxyWithInterceptors resolution option', async () => {
+      ctx.bind('my-controller').toClass(MyControllerWithClassLevelInterceptors);
+      const proxy = await ctx.get<MyControllerWithClassLevelInterceptors>(
+        'my-controller',
+        {asProxyWithInterceptors: true},
+      );
+      const msg = await proxy!.greet('John');
+      expect(msg).to.equal('Hello, JOHN');
+      expect(events).to.eql([
+        'convertName: before-greet',
+        'log: before-greet',
+        'log: after-greet',
+        'convertName: after-greet',
+      ]);
+    });
+
+    it('supports asProxyWithInterceptors resolution option for @inject', async () => {
+      class DummyController {
+        constructor(
+          @inject('my-controller', {asProxyWithInterceptors: true})
+          public readonly myController: MyControllerWithClassLevelInterceptors,
+        ) {}
+      }
+      ctx.bind('my-controller').toClass(MyControllerWithClassLevelInterceptors);
+      ctx.bind('dummy-controller').toClass(DummyController);
+      const dummyController = await ctx.get<DummyController>(
+        'dummy-controller',
+      );
+      const msg = await dummyController.myController.greet('John');
+      expect(msg).to.equal('Hello, JOHN');
+      expect(events).to.eql([
+        'convertName: before-greet',
+        'log: before-greet',
+        'log: after-greet',
+        'convertName: after-greet',
       ]);
     });
   });

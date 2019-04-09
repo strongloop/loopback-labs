@@ -6,6 +6,7 @@
 import * as debugFactory from 'debug';
 import {BindingAddress, BindingKey} from './binding-key';
 import {Context} from './context';
+import {createProxyWithInterceptors} from './interceptor';
 import {Provider} from './provider';
 import {
   asResolutionOptions,
@@ -503,9 +504,18 @@ export class Binding<T = BoundValue> {
       debug('Bind %s to class %s', this.key, ctor.name);
     }
     this._type = BindingType.CLASS;
-    this._setValueGetter((ctx, options) =>
-      instantiateClass(ctor, ctx, options.session),
-    );
+    this._setValueGetter((ctx, options) => {
+      const instOrPromise = instantiateClass(ctor, ctx, options.session);
+      if (!options.asProxyWithInterceptors) return instOrPromise;
+      return transformValueOrPromise(instOrPromise, inst => {
+        if (typeof inst !== 'object') return inst;
+        return (createProxyWithInterceptors(
+          // Cast inst from `T` to `object`
+          (inst as unknown) as object,
+          ctx,
+        ) as unknown) as T;
+      });
+    });
     this._valueConstructor = ctor;
     return this;
   }
@@ -521,8 +531,7 @@ export class Binding<T = BoundValue> {
       debug('Bind %s to alias %s', this.key, keyWithPath);
     }
     this._type = BindingType.ALIAS;
-    this._setValueGetter((ctx, optionsOrSession) => {
-      const options = asResolutionOptions(optionsOrSession);
+    this._setValueGetter((ctx, options) => {
       return ctx.getValueOrPromise(keyWithPath, options);
     });
     return this;

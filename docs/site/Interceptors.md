@@ -20,6 +20,8 @@ method invocations. There are many use cases for interceptors, such as:
 
 ## Basic use
 
+### Interceptors on controllers
+
 Interceptors are supported for public controller methods (including both static
 and prototype) and handler functions for REST routes.
 
@@ -78,6 +80,51 @@ function toLowerCase(text: string) {
 
 app.route('get', '/toLowerCase/{text}', toLowerCaseOperationSpec, toLowerCase);
 ```
+
+### Create a proxy to apply interceptors
+
+A
+[proxy](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy)
+can be created from the target class or object to apply interceptors. This is
+useful for the case that a controller declares dependencies of repositories or
+services and would like to allow repository or service methods to be
+intercepted.
+
+```ts
+import {createProxyWithInterceptors} from '@loopback/context';
+
+const proxy = createProxyWithInterceptors(controllerWithClassInterceptors, ctx);
+const msg = await proxy.greet('John');
+```
+
+There is also an `asProxyWithInterceptors` option for binding resolution or
+dependency injection to return a proxy to apply interceptors as methods are
+invoked.
+
+```ts
+class DummyController {
+  constructor(
+    @inject('my-controller', {asProxyWithInterceptors: true})
+    public readonly myController: MyControllerWithClassLevelInterceptors,
+  ) {}
+}
+ctx.bind('my-controller').toClass(MyControllerWithClassLevelInterceptors);
+ctx.bind('dummy-controller').toClass(DummyController);
+const dummyController = await ctx.get<DummyController>('dummy-controller');
+const msg = await dummyController.myController.greet('John');
+);
+```
+
+Or:
+
+```ts
+const proxy = await ctx.get<MyControllerWithClassLevelInterceptors>(
+  'my-controller',
+  {asProxyWithInterceptors: true},
+const msg = await proxy.greet('John');
+```
+
+### Use `invokeMethod` to apply interceptors
 
 To explicitly invoke a method with interceptors, use `invokeMethod` from
 `@loopback/context`. Please note `invokeMethod` is used internally by

@@ -154,6 +154,7 @@ function resolve<T>(
           // If the `optional` flag is set for the injection, the resolution
           // will return `undefined` instead of throwing an error
           optional: injection.metadata.optional,
+          asProxyWithInterceptors: injection.metadata.asProxyWithInterceptors,
         });
       }
     },

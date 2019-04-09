@@ -315,3 +315,36 @@ function invokeInterceptors(
   };
   return next();
 }
+
+/**
+ * A proxy handler that applies interceptors
+ *
+ * See https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Global_Objects/Proxy
+ */
+export class InterceptorHandler<T extends object> implements ProxyHandler<T> {
+  constructor(private context = new Context()) {}
+  get(target: T, p: PropertyKey, receiver: any): any {
+    const targetObj = target as any;
+    if (typeof p !== 'string') return targetObj[p];
+    const propertyOrMethod = targetObj[p];
+    if (typeof propertyOrMethod === 'function') {
+      return (...args: any[]) => {
+        return invokeMethodWithInterceptors(this.context, target, p, args);
+      };
+    } else {
+      return propertyOrMethod;
+    }
+  }
+}
+
+/**
+ * Create a proxy that applies interceptors for method invocations
+ * @param target Target class or object
+ * @param context Context object
+ */
+export function createProxyWithInterceptors<T extends object>(
+  target: T,
+  context?: Context,
+) {
+  return new Proxy(target, new InterceptorHandler(context));
+}
