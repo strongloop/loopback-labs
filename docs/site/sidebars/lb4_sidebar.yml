@@ -141,6 +141,10 @@ children:
     url: Controllers.html
     output: 'web, pdf'
 
+  - title: 'Components'
+    url: Components.html
+    output: 'web, pdf'
+
   - title: 'DataSources'
     url: DataSources.html
     output: 'web, pdf'
