@@ -51,35 +51,9 @@ app
   .apply(asInterceptor);
 ```
 
-Global interceptors are also executed for handler functions without a controller
-class:
-
-```ts
-/**
- * OpenAPI operation spec for `toLowerCase(text: string)`
- */
-const toLowerCaseOperationSpec = anOperationSpec()
-  .withOperationName('toLowerCase')
-  .withParameter({
-    name: 'text',
-    in: 'path',
-    schema: {
-      type: 'string',
-    },
-  })
-  .withStringResponse()
-  .build();
-
-/**
- * A plain function to convert `text` to lower case
- * @param text
- */
-function toLowerCase(text: string) {
-  return text.toLowerCase();
-}
-
-app.route('get', '/toLowerCase/{text}', toLowerCaseOperationSpec, toLowerCase);
-```
+Global interceptors are also executed for route handler functions without a
+controller class. See an example in
+[Route Handler](Routes.md#using-partial-openapi-spec-fragments).
 
 ### Create a proxy to apply interceptors
 
@@ -93,7 +67,10 @@ intercepted.
 ```ts
 import {createProxyWithInterceptors} from '@loopback/context';
 
-const proxy = createProxyWithInterceptors(controllerWithClassInterceptors, ctx);
+const proxy = createProxyWithInterceptors(
+  controllerInstanceWithClassInterceptors,
+  ctx,
+);
 const msg = await proxy.greet('John');
 ```
 
