@@ -7,14 +7,10 @@ import {BindingFilter} from './binding-filter';
 import {BindingKey} from './binding-key';
 import {Context} from './context';
 import {ContextView} from './context-view';
-import {
-  inject,
-  Injection,
-  InjectionMetadata,
-  inspectTargetType,
-} from './inject';
+import {assertTargetType, inject, Injection, InjectionMetadata} from './inject';
 import {ResolutionSession} from './resolution-session';
 import {getDeepProperty, ValueOrPromise} from './value-promise';
+
 /**
    * Inject a property from `config` of the current binding. If no corresponding
    * config value is present, `undefined` will be injected.
@@ -82,39 +78,56 @@ export namespace config {
   };
 }
 
+/**
+ * Get the key for the current binding on which dependency injection is
+ * performed
+ * @param session Resolution session
+ */
+function getCurrentBindingKey(session: ResolutionSession) {
+  // The current binding is not set if `instantiateClass` is invoked directly
+  return session.currentBinding && session.currentBinding.key;
+}
+
+/**
+ * Resolver for `@config`
+ * @param ctx
+ * @param injection
+ * @param session
+ */
 function resolveFromConfig(
   ctx: Context,
   injection: Injection,
   session: ResolutionSession,
 ): ValueOrPromise<unknown> {
-  if (!session.currentBinding) {
-    // No binding is available
-    return undefined;
-  }
-
-  const meta = injection.metadata || {};
-  const binding = session.currentBinding;
-
-  return ctx.getConfigAsValueOrPromise(binding.key, meta.configPath, {
+  const bindingKey = getCurrentBindingKey(session);
+  // Return `undefined` if no current binding is present
+  if (!bindingKey) return undefined;
+  const meta = injection.metadata;
+  return ctx.getConfigAsValueOrPromise(bindingKey, meta.configPath, {
     session,
     optional: meta.optional,
   });
 }
 
+/**
+ * Resolver from `@config.getter`
+ * @param ctx
+ * @param injection
+ * @param session
+ */
 function resolveAsGetterFromConfig(
   ctx: Context,
   injection: Injection,
   session: ResolutionSession,
 ) {
-  if (!session.currentBinding) {
-    // No binding is available
-    return undefined;
-  }
-  const meta = injection.metadata || {};
-  const bindingKey = session.currentBinding.key;
+  assertTargetType(injection, Function, 'Getter function');
+  const bindingKey = getCurrentBindingKey(session);
   // We need to clone the session for the getter as it will be resolved later
   const forkedSession = ResolutionSession.fork(session);
+  const meta = injection.metadata;
   return async function getter() {
+    // Return `undefined` if no current binding is present
+    if (!bindingKey) return undefined;
     return ctx.getConfigAsValueOrPromise(bindingKey, meta.configPath, {
       session: forkedSession,
       optional: meta.optional,
@@ -122,33 +135,34 @@ function resolveAsGetterFromConfig(
   };
 }
 
+/**
+ * Resolver for `@config.view`
+ * @param ctx
+ * @param injection
+ * @param session
+ */
 function resolveAsViewFromConfig(
   ctx: Context,
   injection: Injection,
   session: ResolutionSession,
 ) {
-  const targetType = inspectTargetType(injection);
-  if (targetType && targetType !== ContextView) {
-    const targetName = ResolutionSession.describeInjection(injection)!
-      .targetName;
-    throw new Error(
-      `The type of ${targetName} (${targetType.name}) is not ContextView`,
-    );
-  }
-  if (!session.currentBinding) {
-    // No binding is available
-    return undefined;
-  }
-  const bindingKey = session.currentBinding.key;
+  assertTargetType(injection, ContextView);
+  const bindingKey = getCurrentBindingKey(session);
+  // Return `undefined` if no current binding is present
+  if (!bindingKey) return undefined;
   const view = new ConfigView(
     ctx,
     binding =>
       binding.key === BindingKey.buildKeyForConfig(bindingKey).toString(),
+    injection.metadata.configPath,
   );
   view.open();
   return view;
 }
 
+/**
+ * A Context to handle dynamic configuration
+ */
 class ConfigView extends ContextView {
   constructor(
     ctx: Context,
@@ -160,8 +174,8 @@ class ConfigView extends ContextView {
 
   async values(session?: ResolutionSession) {
     const configValues = await super.values(session);
-    return configValues.map(v =>
-      this.configPath ? getDeepProperty(v, this.configPath) : v,
-    );
+    const configPath = this.configPath;
+    if (!configPath) return configValues;
+    return configValues.map(v => getDeepProperty(v, configPath));
   }
 }

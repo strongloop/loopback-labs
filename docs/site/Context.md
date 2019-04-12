@@ -555,12 +555,12 @@ export class RestServer {
 }
 ```
 
-The configuration itself is a binding (`RestBindings.CONFIG`) in the context.
-It's independent of the binding for `RestServer`. The caveat is that we need to
-maintain a different binding key for the configuration. Referencing a hard-coded
-key for the configuration also makes it impossible to have more than one
-instances of the `RestServer` to be configured with different options, such as
-`protocol` or `port`.
+The configuration (`RestServerConfig`) itself is a binding
+(`RestBindings.CONFIG`) in the context. It's independent of the binding for
+`RestServer`. The caveat is that we need to maintain a different binding key for
+the configuration. Referencing a hard-coded key for the configuration also makes
+it impossible to have more than one instances of the `RestServer` to be
+configured with different options, such as `protocol` or `port`.
 
 To solve these problems, we introduce an accompanying binding for an item that
 expects configuration. For example:
@@ -577,8 +577,7 @@ The following APIs are available to enforce/leverage this convention:
 2. ctx.getConfig('servers.RestServer.server1') => Get configuration
 3. `@config` to inject corresponding configuration
 4. `@config.getter` to inject a getter function for corresponding configuration
-5. `@config` to inject a `SingleValuedContextView` for corresponding
-   configuration
+5. `@config.view` to inject a `ContextView` for corresponding configuration
 
 Now the RestServer can use `@config`:
 
@@ -595,6 +594,10 @@ export class RestServer {
 }
 ```
 
+The `@config.*` decorators can take an optional `configPath` parameter to allow
+the configuration value to be a deep property of the bound value. For example,
+`@config('port')` injects `RestServerConfig.port` to the target.
+
 ```ts
 const appCtx = new Context();
 appCtx.bind('servers.RestServer.server1').toClass(RestServer);
@@ -609,12 +612,12 @@ appCtx.configure('servers.RestServer.server2').to({protocol: 'http', port: 80});
 ### Allow configuration to be changed dynamically
 
 Some configurations are designed to be changeable dynamically, for example, the
-logging level for an application. To allow that, we introduce `@configGetter` to
-always fetch the latest value of the configuration.
+logging level for an application. To allow that, we introduce `@config.getter`
+to always fetch the latest value of the configuration.
 
 ```ts
 export class Logger {
-  @configGetter()
+  @config.getter()
   private getLevel: Getter<string>;
 
   async log(level: string, message: string) {

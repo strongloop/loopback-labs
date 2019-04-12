@@ -715,9 +715,7 @@ describe('Context bindings - Injecting dependencies of classes', () => {
       constructor(@config('x') public optionX: number) {}
     }
 
-    ctx.configure('store').toDynamicValue(async () => {
-      return {x: 1};
-    });
+    ctx.configure('store').toDynamicValue(() => Promise.resolve({x: 1}));
     ctx.bind('store').toClass(Store);
     const store = await ctx.get<Store>('store');
     expect(store.optionX).to.eql(1);
@@ -806,10 +804,7 @@ describe('Context bindings - Injecting dependencies of classes', () => {
 
   it('injects undefined option if key not found', () => {
     class Store {
-      constructor(
-        // tslint:disable-next-line:no-any
-        @config('not-exist') public option: string | undefined,
-      ) {}
+      constructor(@config('not-exist') public option: string | undefined) {}
     }
 
     ctx.configure('store').to({x: 1, y: 'a'});
@@ -843,10 +838,7 @@ describe('Context bindings - Injecting dependencies of classes', () => {
 
   it('injects undefined config if no binding is present', async () => {
     class Store {
-      constructor(
-        // tslint:disable-next-line:no-any
-        @config('x') public configVal: string | undefined,
-      ) {}
+      constructor(@config('x') public configVal: string | undefined) {}
     }
 
     const store = await instantiateClass(Store, ctx);

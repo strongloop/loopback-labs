@@ -13,11 +13,15 @@ import {ValueOrPromise} from './value-promise';
  */
 export interface ConfigurationResolver {
   /**
-   * Resolve the configuration value for a given binding key and config property
-   * path
+   * Resolve config for the binding key
+   *
    * @param key Binding key
-   * @param configPath Config property path
-   * @param resolutionOptions Resolution options
+   * @param configPath Property path for the option. For example, `x.y`
+   * requests for `<config>.x.y`. If not set, the `config` object will be
+   * returned.
+   * @param resolutionOptions Options for the resolution.
+   * - optional: if not set or set to `true`, `undefined` will be returned if
+   * no corresponding value is found. Otherwise, an error will be thrown.
    */
   getConfigAsValueOrPromise<ConfigValueType>(
     key: BindingAddress<unknown>,
@@ -32,17 +36,6 @@ export interface ConfigurationResolver {
 export class DefaultConfigurationResolver implements ConfigurationResolver {
   constructor(public readonly context: Context) {}
 
-  /**
-   * Resolve config for the binding key
-   *
-   * @param key Binding key
-   * @param configPath Property path for the option. For example, `x.y`
-   * requests for `<config>.x.y`. If not set, the `config` object will be
-   * returned.
-   * @param resolutionOptions Options for the resolution.
-   * - optional: if not set or set to `true`, `undefined` will be returned if
-   * no corresponding value is found. Otherwise, an error will be thrown.
-   */
   getConfigAsValueOrPromise<ConfigValueType>(
     key: BindingAddress<unknown>,
     configPath?: string,
@@ -59,6 +52,11 @@ export class DefaultConfigurationResolver implements ConfigurationResolver {
   }
 }
 
+/**
+ * Create binding key for configuration of the binding
+ * @param key Binding key for the target binding
+ * @param configPath Property path for the configuration
+ */
 export function configBindingKeyFor<ConfigValueType = unknown>(
   key: BindingAddress,
   configPath?: string,

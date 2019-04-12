@@ -72,17 +72,11 @@ describe('Context binding configuration', () => {
     });
 
     it('throws error if a required config cannot be resolved', async () => {
-      expect(
+      await expect(
         ctx.getConfig('servers.rest', 'host', {
           optional: false,
         }),
-      )
-        .to.be.rejectedWith(
-          `Configuration 'servers.rest#host' cannot be resolved`,
-        )
-        .catch(e => {
-          // Sink the error to avoid UnhandledPromiseRejectionWarning
-        });
+      ).to.be.rejectedWith(/The key 'servers\.rest\:\$config' is not bound/);
     });
   });
 
