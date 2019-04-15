@@ -7,7 +7,7 @@ import {expect} from '@loopback/testlab';
 import {assignRouterSpec, RouterSpec} from '../../../';
 
 describe('assignRouterSpec', () => {
-  it('duplicates the additions spec if the target spec is empty', async () => {
+  it('duplicates the additions spec if the target spec is empty', () => {
     const target: RouterSpec = {paths: {}};
     const additions: RouterSpec = {
       paths: {
@@ -45,7 +45,7 @@ describe('assignRouterSpec', () => {
     expect(target).to.eql(additions);
   });
 
-  it('does not assign components without schema', async () => {
+  it('does not assign components without schema', () => {
     const target: RouterSpec = {
       paths: {},
       components: {},
@@ -78,7 +78,7 @@ describe('assignRouterSpec', () => {
     expect(target.components).to.be.empty();
   });
 
-  it('uses the route registered first', async () => {
+  it('uses the route registered first', () => {
     const originalPath = {
       '/': {
         get: {
@@ -129,7 +129,7 @@ describe('assignRouterSpec', () => {
     expect(target.paths).to.eql(originalPath);
   });
 
-  it('does not duplicate tags from the additional spec', async () => {
+  it('does not duplicate tags from the additional spec', () => {
     const target: RouterSpec = {
       paths: {},
       tags: [{name: 'greeting', description: 'greetings'}],
@@ -147,5 +147,40 @@ describe('assignRouterSpec', () => {
       {name: 'greeting', description: 'greetings'},
       {name: 'salutation', description: 'salutations!'},
     ]);
+  });
+
+  it("assigns requestBodies to the target's components when they exist", () => {
+    const target: RouterSpec = {paths: {}};
+    const additions: RouterSpec = {
+      paths: {},
+      components: {
+        schemas: {
+          Greeting: {
+            type: 'object',
+            properties: {
+              message: {
+                type: 'string',
+              },
+            },
+          },
+        },
+        requestBodies: {
+          Greeting: {
+            content: {
+              'application/json': {
+                schema: {
+                  $ref: '#/components/schemas/Greeting',
+                },
+              },
+            },
+            description: 'Model instance data',
+          },
+        },
+      },
+      tags: [{name: 'greeting', description: 'greetings'}],
+    };
+
+    assignRouterSpec(target, additions);
+    expect(target).to.eql(additions);
   });
 });

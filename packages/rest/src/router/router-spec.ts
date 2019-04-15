@@ -12,6 +12,15 @@ export function assignRouterSpec(target: RouterSpec, additions: RouterSpec) {
     if (!target.components) target.components = {};
     if (!target.components.schemas) target.components.schemas = {};
     Object.assign(target.components.schemas, additions.components.schemas);
+
+    if (additions.components.requestBodies) {
+      if (!target.components.requestBodies)
+        target.components.requestBodies = {};
+      Object.assign(
+        target.components.requestBodies,
+        additions.components.requestBodies,
+      );
+    }
   }
 
   for (const url in additions.paths) {
