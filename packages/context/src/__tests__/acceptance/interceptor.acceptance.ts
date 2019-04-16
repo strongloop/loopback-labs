@@ -6,6 +6,7 @@
 import {expect} from '@loopback/testlab';
 import {
   asInterceptor,
+  AsyncProxy,
   Context,
   createProxyWithInterceptors,
   inject,
@@ -361,12 +362,34 @@ describe('Interceptor', () => {
       ]);
     });
 
+    it('creates a proxy that converts sync method to be async', async () => {
+      // Apply `log` to all methods on the class
+      @intercept(log)
+      class MyController {
+        // Apply multiple interceptors. The order of `log` will be preserved as it
+        // explicitly listed at method level
+        @intercept(convertName, log)
+        greet(name: string) {
+          return `Hello, ${name}`;
+        }
+      }
+      const proxy = createProxyWithInterceptors(new MyController(), ctx);
+      const msg = await proxy.greet('John');
+      expect(msg).to.equal('Hello, JOHN');
+      expect(events).to.eql([
+        'convertName: before-greet',
+        'log: before-greet',
+        'log: after-greet',
+        'convertName: after-greet',
+      ]);
+    });
+
     it('invokes interceptors on a static method', async () => {
       // Apply `log` to all methods on the class
       @intercept(log)
       class MyController {
         // The class level `log` will be applied
-        static async greetStatic(name: string) {
+        static greetStatic(name: string) {
           return `Hello, ${name}`;
         }
       }
@@ -420,7 +443,7 @@ describe('Interceptor', () => {
       class DummyController {
         constructor(
           @inject('my-controller', {asProxyWithInterceptors: true})
-          public readonly myController: MyController,
+          public readonly myController: AsyncProxy<MyController>,
         ) {}
       }
       ctx.bind('my-controller').toClass(MyController);
