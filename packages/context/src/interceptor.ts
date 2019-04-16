@@ -17,13 +17,22 @@ import {Binding} from './binding';
 import {filterByTag} from './binding-filter';
 import {BindingAddress} from './binding-key';
 import {Context} from './context';
-import {ContextView} from './context-view';
 import {ContextTags} from './keys';
 import {transformValueOrPromise, ValueOrPromise} from './value-promise';
 const debug = debugFactory('loopback:context:intercept');
 const getTargetName = DecoratorFactory.getTargetName;
 
-// tslint:disable:no-any
+/**
+ * Array of arguments
+ */
+// tslint:disable-next-line:no-any
+export type InvocationArgs = any[];
+
+/**
+ * A type for class or its prototype
+ */
+// tslint:disable-next-line:no-any
+type ClassOrPrototype = any;
 
 /**
  * InvocationContext represents the context to invoke interceptors for a method.
@@ -42,7 +51,7 @@ export class InvocationContext extends Context {
     parent: Context,
     public readonly target: object,
     public readonly methodName: string,
-    public readonly args: any[],
+    public readonly args: InvocationArgs,
   ) {
     super(parent);
   }
@@ -50,12 +59,8 @@ export class InvocationContext extends Context {
   /**
    * Discover all binding keys for global interceptors
    */
-  getGlobalInterceptorBindingKeys() {
-    const view = new ContextView<Interceptor>(
-      this,
-      filterByTag(ContextTags.INTERCEPTOR),
-    );
-    return view.bindings.map(b => b.key);
+  getGlobalInterceptorBindingKeys(): string[] {
+    return this.find(filterByTag(ContextTags.INTERCEPTOR)).map(b => b.key);
   }
 }
 
@@ -110,19 +115,19 @@ function mergeInterceptors(
   interceptorsFromSpec: InterceptorOrKey[],
   existingInterceptors: InterceptorOrKey[],
 ) {
-  const set1 = new Set(interceptorsFromSpec);
-  const set2 = new Set(existingInterceptors);
+  const interceptorsToApply = new Set(interceptorsFromSpec);
+  const appliedInterceptors = new Set(existingInterceptors);
   // Remove interceptors that already exist
-  for (const i of set1) {
-    if (set2.has(i)) {
-      set1.delete(i);
+  for (const i of interceptorsToApply) {
+    if (appliedInterceptors.has(i)) {
+      interceptorsToApply.delete(i);
     }
   }
   // Add existing interceptors after ones from the spec
-  for (const i of set2) {
-    set1.add(i);
+  for (const i of appliedInterceptors) {
+    interceptorsToApply.add(i);
   }
-  return Array.from(set1);
+  return Array.from(interceptorsToApply);
 }
 
 /**
@@ -183,7 +188,7 @@ class InterceptMethodDecoratorFactory extends MethodDecoratorFactory<
  */
 export function intercept(...interceptorOrKeys: InterceptorOrKey[]) {
   return function interceptDecoratorForClassOrMethod(
-    target: any,
+    target: ClassOrPrototype,
     method?: string,
     methodDescriptor?: TypedPropertyDescriptor<unknown>,
   ) {
@@ -220,7 +225,7 @@ export function invokeMethodWithInterceptors(
   context: Context,
   target: object,
   methodName: string,
-  args: any[],
+  args: InvocationArgs,
 ) {
   const targetWithMethods = target as Record<string, Function>;
   assert(
@@ -323,12 +328,12 @@ function invokeInterceptors(
  */
 export class InterceptorHandler<T extends object> implements ProxyHandler<T> {
   constructor(private context = new Context()) {}
-  get(target: T, p: PropertyKey, receiver: any): any {
-    const targetObj = target as any;
+  get(target: T, p: PropertyKey, receiver: unknown) {
+    const targetObj = target as ClassOrPrototype;
     if (typeof p !== 'string') return targetObj[p];
     const propertyOrMethod = targetObj[p];
     if (typeof propertyOrMethod === 'function') {
-      return (...args: any[]) => {
+      return (...args: InvocationArgs) => {
         return invokeMethodWithInterceptors(this.context, target, p, args);
       };
     } else {

@@ -67,10 +67,7 @@ intercepted.
 ```ts
 import {createProxyWithInterceptors} from '@loopback/context';
 
-const proxy = createProxyWithInterceptors(
-  controllerInstanceWithClassInterceptors,
-  ctx,
-);
+const proxy = createProxyWithInterceptors(controllerInstance, ctx);
 const msg = await proxy.greet('John');
 ```
 
@@ -82,10 +79,10 @@ invoked.
 class DummyController {
   constructor(
     @inject('my-controller', {asProxyWithInterceptors: true})
-    public readonly myController: MyControllerWithClassLevelInterceptors,
+    public readonly myController: MyController,
   ) {}
 }
-ctx.bind('my-controller').toClass(MyControllerWithClassLevelInterceptors);
+ctx.bind('my-controller').toClass(MyController);
 ctx.bind('dummy-controller').toClass(DummyController);
 const dummyController = await ctx.get<DummyController>('dummy-controller');
 const msg = await dummyController.myController.greet('John');
@@ -95,7 +92,7 @@ const msg = await dummyController.myController.greet('John');
 Or:
 
 ```ts
-const proxy = await ctx.get<MyControllerWithClassLevelInterceptors>(
+const proxy = await ctx.get<MyController>(
   'my-controller',
   {asProxyWithInterceptors: true},
 const msg = await proxy.greet('John');
@@ -264,6 +261,7 @@ class MyControllerWithClassLevelInterceptors {
     return `Hello, ${name}`;
   }
 
+  // A static method with parameter injection
   @intercept(log)
   static async greetStaticWithDI(@inject('name') name: string) {
     return `Hello, ${name}`;
@@ -308,59 +306,70 @@ interceptors is created from top to bottom and from left to right. Duplicate
 entries are removed from their first occurrences.
 
 Let's examine the list of interceptors invoked for each method on
-`MyControllerWithClassLevelInterceptors`, which has a class level `log`
-decorator:
+`MyController`, which has a class level `log` decorator:
 
-```ts
-// Apply `log` to all methods on the class
-@intercept(log)
-class MyControllerWithClassLevelInterceptors {
-  // ...
-}
-```
-
-1. greetStatic: [`log`]
+1. A static method on the class - `greetStatic`
 
    ```ts
-   // No explicit `@intercept` at method level. The class level `log` will
-   // be applied
-   static async greetStatic(name: string) {
-     return `Hello, ${name}`;
-   }
-   ```
-
-2. greetStaticWithDI: [`log`]
-
-   ```ts
-   // The method level `log` overrides the class level one
    @intercept(log)
-   static async greetStaticWithDI(@inject('name') name: string) {
-     return `Hello, ${name}`;
+   class MyController {
+     // No explicit `@intercept` at method level. The class level `log` will
+     // be applied
+     static async greetStatic(name: string) {
+       return `Hello, ${name}`;
+     }
    }
    ```
 
-3. greetSync: [`log`, `logSync`]
+   Interceptors to apply: [`log`]
+
+2. A static method that requires parameter injection: `greetStaticWithDI`
 
    ```ts
-   // We can apply `@intercept` multiple times on the same method
-   // This is needed if a custom decorator is created for `@intercept`
-   @intercept(log) // The method level `log` overrides the class level one
-   @intercept(logSync)
-   greetSync(name: string) {
-     return `Hello, ${name}`;
+   @intercept(log)
+   class MyController {
+     // The method level `log` overrides the class level one
+     @intercept(log)
+     static async greetStaticWithDI(@inject('name') name: string) {
+       return `Hello, ${name}`;
+     }
    }
    ```
 
-4. greet: [`convertName`, `log`]
+   Interceptors to apply: [`log`]
+
+3. A prototype method with multiple `@intercept` - `greetSync`
 
    ```ts
-   // Apply multiple interceptors. The order of `log` will be preserved as it
-   // explicitly listed at method level
-   @intercept(convertName, log)
-   async greet(name: string) {
-     return `Hello, ${name}`;
+   @intercept(log)
+   class MyController {
+     // We can apply `@intercept` multiple times on the same method
+     // This is needed if a custom decorator is created for `@intercept`
+     @intercept(log) // The method level `log` overrides the class level one
+     @intercept(logSync)
+     greetSync(name: string) {
+       return `Hello, ${name}`;
+     }
    }
    ```
+
+   Interceptors to apply: [`log`, `logSync`]
+
+4. A prototype method that preserves the order of an interceptor - `greet`
+
+   ```ts
+   @intercept(log)
+   class MyController {
+     // Apply multiple interceptors. The order of `log` will be preserved as it
+     // explicitly listed at method level
+     @intercept(convertName, log)
+     async greet(name: string) {
+       return `Hello, ${name}`;
+     }
+   }
+   ```
+
+   Interceptors to apply: [`convertName`, `log`]
 
 ## Create your own interceptors
 
@@ -407,7 +416,7 @@ export class InvocationContext extends Context {
     parent: Context,
     public readonly target: object,
     public readonly methodName: string,
-    public readonly args: any[],
+    public readonly args: InvocationArgs, // any[]
   ) {
     super(parent);
   }
@@ -452,8 +461,9 @@ response from cache without invoking the target method.
 
 Here are some example interceptor functions:
 
+1. A synchronous interceptor to log method invocations:
+
 ```ts
-// A sync interceptor to log method calls
 const logSync: Interceptor = (invocationCtx, next) => {
   console.log('logSync: before-' + invocationCtx.methodName);
   // Calling `next()` without `await`
@@ -463,8 +473,11 @@ const logSync: Interceptor = (invocationCtx, next) => {
   console.log('logSync: after-' + invocationCtx.methodName);
   return result;
 };
+```
 
-// An async interceptor to log method calls
+2. An asynchronous interceptor to log method invocations:
+
+```ts
 const log: Interceptor = async (invocationCtx, next) => {
   console.log('log: before-' + invocationCtx.methodName);
   // Wait until the interceptor/method chain returns
@@ -472,8 +485,11 @@ const log: Interceptor = async (invocationCtx, next) => {
   console.log('log: after-' + invocationCtx.methodName);
   return result;
 };
+```
 
-// An interceptor to catch and log errors
+3. An interceptor to catch and log errors:
+
+```ts
 const logError: Interceptor = async (invocationCtx, next) => {
   console.log('logError: before-' + invocationCtx.methodName);
   try {
@@ -485,16 +501,21 @@ const logError: Interceptor = async (invocationCtx, next) => {
     throw err;
   }
 };
+```
 
-// An interceptor to convert `name` arg to upper case
+4. An interceptor to convert `name` arg to upper case:
+
+```ts
 const convertName: Interceptor = async (invocationCtx, next) => {
-  console.log('convertName: before-' + invocationCtx.methodName);
+  console.log('convertName:before-' + invocationCtx.methodName);
   invocationCtx.args[0] = (invocationCtx.args[0] as string).toUpperCase();
   const result = await next();
   console.log('convertName: after-' + invocationCtx.methodName);
   return result;
 };
 ```
+
+5. An provider class for an interceptor that performs parameter validation
 
 To leverage dependency injection, a provider class can be defined as the
 interceptor:

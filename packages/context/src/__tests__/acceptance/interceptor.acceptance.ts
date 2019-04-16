@@ -20,12 +20,19 @@ import {
 
 describe('Interceptor', () => {
   let ctx: Context;
-  let controller: MyController;
-  let controllerWithClassInterceptors: MyControllerWithClassLevelInterceptors;
 
-  beforeEach(givenContextAndController);
+  beforeEach(givenContextAndEvents);
 
-  it('invokes sync interceptors', () => {
+  it('invokes sync interceptors on a sync method', () => {
+    class MyController {
+      // Apply `logSync` to a sync instance method
+      @intercept(logSync)
+      greetSync(name: string) {
+        return `Hello, ${name}`;
+      }
+    }
+    const controller = new MyController();
+
     const msg = invokeMethodWithInterceptors(ctx, controller, 'greetSync', [
       'John',
     ]);
@@ -36,7 +43,16 @@ describe('Interceptor', () => {
     ]);
   });
 
-  it('invokes async interceptors', async () => {
+  it('invokes async interceptors on a sync method', async () => {
+    class MyController {
+      // Apply `log` to a sync instance method
+      @intercept(log)
+      greet(name: string) {
+        return `Hello, ${name}`;
+      }
+    }
+
+    const controller = new MyController();
     const msg = await invokeMethodWithInterceptors(ctx, controller, 'greet', [
       'John',
     ]);
@@ -45,93 +61,129 @@ describe('Interceptor', () => {
   });
 
   it('supports interceptor bindings', async () => {
+    class MyController {
+      // Apply `log` as a binding key to an async instance method
+      @intercept('log')
+      async greet(name: string) {
+        const hello = await Promise.resolve(`Hello, ${name}`);
+        return hello;
+      }
+    }
+
+    const controller = new MyController();
     ctx.bind('log').to(log);
-    const msg = await invokeMethodWithInterceptors(
-      ctx,
-      controller,
-      'greetWithABoundInterceptor',
-      ['John'],
-    );
-    expect(msg).to.equal('Hello, John');
-    expect(events).to.eql([
-      'log: before-greetWithABoundInterceptor',
-      'log: after-greetWithABoundInterceptor',
+    const msg = await invokeMethodWithInterceptors(ctx, controller, 'greet', [
+      'John',
     ]);
+    expect(msg).to.equal('Hello, John');
+    expect(events).to.eql(['log: before-greet', 'log: after-greet']);
   });
 
   it('supports interceptor bindings from a provider', async () => {
+    class MyController {
+      // Apply `name-validator` backed by a provider class
+      @intercept('name-validator')
+      async greet(name: string) {
+        return `Hello, ${name}`;
+      }
+    }
+    const controller = new MyController();
     ctx.bind('valid-names').to(['John', 'Mary']);
     ctx.bind('name-validator').toProvider(NameValidator);
-    const msg = await invokeMethodWithInterceptors(
-      ctx,
-      controller,
-      'greetWithNameValidation',
-      ['John'],
-    );
+    const msg = await invokeMethodWithInterceptors(ctx, controller, 'greet', [
+      'John',
+    ]);
     expect(msg).to.equal('Hello, John');
     expect(
-      invokeMethodWithInterceptors(ctx, controller, 'greetWithNameValidation', [
-        'Smith',
-      ]),
+      invokeMethodWithInterceptors(ctx, controller, 'greet', ['Smith']),
     ).to.be.rejectedWith(/Name 'Smith' is not on the list/);
   });
 
   it('invokes a method with two interceptors', async () => {
+    class MyController {
+      // Apply `log` and `logSync` to an async instance method
+      @intercept('log', logSync)
+      async greet(name: string) {
+        return `Hello, ${name}`;
+      }
+    }
+    const controller = new MyController();
+
     ctx.bind('log').to(log);
-    const msg = await invokeMethodWithInterceptors(
-      ctx,
-      controller,
-      'greetWithTwoInterceptors',
-      ['John'],
-    );
+    const msg = await invokeMethodWithInterceptors(ctx, controller, 'greet', [
+      'John',
+    ]);
     expect(msg).to.equal('Hello, John');
     expect(events).to.eql([
-      'log: before-greetWithTwoInterceptors',
-      'logSync: before-greetWithTwoInterceptors',
-      'logSync: after-greetWithTwoInterceptors',
-      'log: after-greetWithTwoInterceptors',
+      'log: before-greet',
+      'logSync: before-greet',
+      'logSync: after-greet',
+      'log: after-greet',
     ]);
   });
 
   it('invokes a method without interceptors', async () => {
-    const msg = await invokeMethodWithInterceptors(
-      ctx,
-      controller,
-      'greetWithoutInterceptors',
-      ['John'],
-    );
+    class MyController {
+      // No interceptors
+      async greet(name: string) {
+        return `Hello, ${name}`;
+      }
+    }
+    const controller = new MyController();
+
+    const msg = await invokeMethodWithInterceptors(ctx, controller, 'greet', [
+      'John',
+    ]);
     expect(msg).to.equal('Hello, John');
     expect(events).to.eql([]);
   });
 
   it('allows interceptors to modify args', async () => {
-    const msg = await invokeMethodWithInterceptors(
-      ctx,
-      controller,
-      'greetWithUpperCaseName',
-      ['John'],
-    );
+    class MyController {
+      // Apply `convertName` to convert `name` arg to upper case
+      @intercept(convertName)
+      async greet(name: string) {
+        return `Hello, ${name}`;
+      }
+    }
+    const controller = new MyController();
+    const msg = await invokeMethodWithInterceptors(ctx, controller, 'greet', [
+      'John',
+    ]);
     expect(msg).to.equal('Hello, JOHN');
     expect(events).to.eql([
-      'convertName: before-greetWithUpperCaseName',
-      'convertName: after-greetWithUpperCaseName',
+      'convertName: before-greet',
+      'convertName: after-greet',
     ]);
   });
 
   it('allows interceptors to catch errors', async () => {
+    class MyController {
+      // Apply `logError` to catch errors
+      @intercept(logError)
+      async greet(name: string) {
+        throw new Error('error: ' + name);
+      }
+    }
+    const controller = new MyController();
     await expect(
-      invokeMethodWithInterceptors(ctx, controller, 'greetWithError', ['John']),
+      invokeMethodWithInterceptors(ctx, controller, 'greet', ['John']),
     ).to.be.rejectedWith('error: John');
-    expect(events).to.eql([
-      'logError: before-greetWithError',
-      'logError: error-greetWithError',
-    ]);
+    expect(events).to.eql(['logError: before-greet', 'logError: error-greet']);
   });
 
   it('invokes static interceptors', async () => {
+    class MyController {
+      // Apply `log` to a static method
+      @intercept(log)
+      static async greetStatic(name: string) {
+        return `Hello, ${name}`;
+      }
+    }
+
     const msg = await invokeMethodWithInterceptors(
       ctx,
-      MyControllerWithStaticMethods,
+      MyController,
       'greetStatic',
       ['John'],
     );
@@ -154,12 +206,15 @@ describe('Interceptor', () => {
 
   context('method dependency injection', () => {
     it('invokes interceptors on a static method', async () => {
+      class MyController {
+        // Apply `log` to a static method with parameter injection
+        @intercept(log)
+        static async greetStaticWithDI(@inject('name') name: string) {
+          return `Hello, ${name}`;
+        }
+      }
       ctx.bind('name').to('John');
-      const msg = await invokeMethod(
-        MyControllerWithStaticMethods,
-        'greetStaticWithDI',
-        ctx,
-      );
+      const msg = await invokeMethod(MyController, 'greetStaticWithDI', ctx);
       expect(msg).to.equal('Hello, John');
       expect(events).to.eql([
         'log: before-greetStaticWithDI',
@@ -168,6 +223,15 @@ describe('Interceptor', () => {
     });
 
     it('invokes interceptors on an instance method', async () => {
+      class MyController {
+        // Apply `log` to an async instance method with parameter injection
+        @intercept(log)
+        async greetWithDI(@inject('name') name: string) {
+          return `Hello, ${name}`;
+        }
+      }
+      const controller = new MyController();
+
       ctx.bind('name').to('John');
       const msg = await invokeMethod(controller, 'greetWithDI', ctx);
       expect(msg).to.equal('Hello, John');
@@ -180,9 +244,21 @@ describe('Interceptor', () => {
 
   context('class level interceptors', () => {
     it('invokes sync and async interceptors', async () => {
+      // Apply `log` to all methods on the class
+      @intercept(log)
+      class MyController {
+        // We can apply `@intercept` multiple times on the same method
+        // This is needed if a custom decorator is created for `@intercept`
+        @intercept(log)
+        @intercept(logSync)
+        greetSync(name: string) {
+          return `Hello, ${name}`;
+        }
+      }
+
       const msg = await invokeMethodWithInterceptors(
         ctx,
-        controllerWithClassInterceptors,
+        new MyController(),
         'greetSync',
         ['John'],
       );
@@ -196,9 +272,19 @@ describe('Interceptor', () => {
     });
 
     it('invokes async interceptors on an async method', async () => {
+      // Apply `log` to all methods on the class
+      @intercept(log)
+      class MyController {
+        // Apply multiple interceptors. The order of `log` will be preserved as it
+        // explicitly listed at method level
+        @intercept(convertName, log)
+        async greet(name: string) {
+          return `Hello, ${name}`;
+        }
+      }
       const msg = await invokeMethodWithInterceptors(
         ctx,
-        controllerWithClassInterceptors,
+        new MyController(),
         'greet',
         ['John'],
       );
@@ -212,9 +298,17 @@ describe('Interceptor', () => {
     });
 
     it('invokes interceptors on a static method', async () => {
+      // Apply `log` to all methods on the class
+      @intercept(log)
+      class MyController {
+        // The class level `log` will be applied
+        static async greetStatic(name: string) {
+          return `Hello, ${name}`;
+        }
+      }
       const msg = await invokeMethodWithInterceptors(
         ctx,
-        MyControllerWithClassLevelInterceptors,
+        MyController,
         'greetStatic',
         ['John'],
       );
@@ -226,12 +320,16 @@ describe('Interceptor', () => {
     });
 
     it('invokes interceptors on a static method with DI', async () => {
+      // Apply `log` to all methods on the class
+      @intercept(log)
+      class MyController {
+        @intercept(log)
+        static async greetStaticWithDI(@inject('name') name: string) {
+          return `Hello, ${name}`;
+        }
+      }
       ctx.bind('name').to('John');
-      const msg = await invokeMethod(
-        MyControllerWithClassLevelInterceptors,
-        'greetStaticWithDI',
-        ctx,
-      );
+      const msg = await invokeMethod(MyController, 'greetStaticWithDI', ctx);
       expect(msg).to.equal('Hello, John');
       expect(events).to.eql([
         'log: before-greetStaticWithDI',
@@ -242,10 +340,17 @@ describe('Interceptor', () => {
 
   context('proxy with interceptors', () => {
     it('invokes async interceptors on an async method', async () => {
-      const proxy = createProxyWithInterceptors(
-        controllerWithClassInterceptors,
-        ctx,
-      );
+      // Apply `log` to all methods on the class
+      @intercept(log)
+      class MyController {
+        // Apply multiple interceptors. The order of `log` will be preserved as it
+        // explicitly listed at method level
+        @intercept(convertName, log)
+        async greet(name: string) {
+          return `Hello, ${name}`;
+        }
+      }
+      const proxy = createProxyWithInterceptors(new MyController(), ctx);
       const msg = await proxy.greet('John');
       expect(msg).to.equal('Hello, JOHN');
       expect(events).to.eql([
@@ -257,11 +362,16 @@ describe('Interceptor', () => {
     });
 
     it('invokes interceptors on a static method', async () => {
+      // Apply `log` to all methods on the class
+      @intercept(log)
+      class MyController {
+        // The class level `log` will be applied
+        static async greetStatic(name: string) {
+          return `Hello, ${name}`;
+        }
+      }
       ctx.bind('name').to('John');
-      const proxy = createProxyWithInterceptors(
-        MyControllerWithClassLevelInterceptors,
-        ctx,
-      );
+      const proxy = createProxyWithInterceptors(MyController, ctx);
       const msg = await proxy.greetStatic('John');
       expect(msg).to.equal('Hello, John');
       expect(events).to.eql([
@@ -271,11 +381,20 @@ describe('Interceptor', () => {
     });
 
     it('supports asProxyWithInterceptors resolution option', async () => {
-      ctx.bind('my-controller').toClass(MyControllerWithClassLevelInterceptors);
-      const proxy = await ctx.get<MyControllerWithClassLevelInterceptors>(
-        'my-controller',
-        {asProxyWithInterceptors: true},
-      );
+      // Apply `log` to all methods on the class
+      @intercept(log)
+      class MyController {
+        // Apply multiple interceptors. The order of `log` will be preserved as it
+        // explicitly listed at method level
+        @intercept(convertName, log)
+        async greet(name: string) {
+          return `Hello, ${name}`;
+        }
+      }
+      ctx.bind('my-controller').toClass(MyController);
+      const proxy = await ctx.get<MyController>('my-controller', {
+        asProxyWithInterceptors: true,
+      });
       const msg = await proxy!.greet('John');
       expect(msg).to.equal('Hello, JOHN');
       expect(events).to.eql([
@@ -287,13 +406,24 @@ describe('Interceptor', () => {
     });
 
     it('supports asProxyWithInterceptors resolution option for @inject', async () => {
+      // Apply `log` to all methods on the class
+      @intercept(log)
+      class MyController {
+        // Apply multiple interceptors. The order of `log` will be preserved as it
+        // explicitly listed at method level
+        @intercept(convertName, log)
+        async greet(name: string) {
+          return `Hello, ${name}`;
+        }
+      }
+
       class DummyController {
         constructor(
           @inject('my-controller', {asProxyWithInterceptors: true})
-          public readonly myController: MyControllerWithClassLevelInterceptors,
+          public readonly myController: MyController,
         ) {}
       }
-      ctx.bind('my-controller').toClass(MyControllerWithClassLevelInterceptors);
+      ctx.bind('my-controller').toClass(MyController);
       ctx.bind('dummy-controller').toClass(DummyController);
       const dummyController = await ctx.get<DummyController>(
         'dummy-controller',
@@ -313,9 +443,20 @@ describe('Interceptor', () => {
     beforeEach(givenGlobalInterceptor);
 
     it('invokes sync and async interceptors', async () => {
+      // Apply `log` to all methods on the class
+      @intercept(log)
+      class MyController {
+        // We can apply `@intercept` multiple times on the same method
+        // This is needed if a custom decorator is created for `@intercept`
+        @intercept(log)
+        @intercept(logSync)
+        greetSync(name: string) {
+          return `Hello, ${name}`;
+        }
+      }
       const msg = await invokeMethodWithInterceptors(
         ctx,
-        controllerWithClassInterceptors,
+        new MyController(),
         'greetSync',
         ['John'],
       );
@@ -331,9 +472,19 @@ describe('Interceptor', () => {
     });
 
     it('invokes async interceptors on an async method', async () => {
+      // Apply `log` to all methods on the class
+      @intercept(log)
+      class MyController {
+        // Apply multiple interceptors. The order of `log` will be preserved as it
+        // explicitly listed at method level
+        @intercept(convertName, log)
+        async greet(name: string) {
+          return `Hello, ${name}`;
+        }
+      }
       const msg = await invokeMethodWithInterceptors(
         ctx,
-        controllerWithClassInterceptors,
+        new MyController(),
         'greet',
         ['John'],
       );
@@ -349,9 +500,17 @@ describe('Interceptor', () => {
     });
 
     it('invokes interceptors on a static method', async () => {
+      // Apply `log` to all methods on the class
+      @intercept(log)
+      class MyController {
+        // The class level `log` will be applied
+        static async greetStatic(name: string) {
+          return `Hello, ${name}`;
+        }
+      }
       const msg = await invokeMethodWithInterceptors(
         ctx,
-        MyControllerWithClassLevelInterceptors,
+        MyController,
         'greetStatic',
         ['John'],
       );
@@ -365,12 +524,16 @@ describe('Interceptor', () => {
     });
 
     it('invokes interceptors on a static method with DI', async () => {
+      // Apply `log` to all methods on the class
+      @intercept(log)
+      class MyController {
+        @intercept(log)
+        static async greetStaticWithDI(@inject('name') name: string) {
+          return `Hello, ${name}`;
+        }
+      }
       ctx.bind('name').to('John');
-      const msg = await invokeMethod(
-        MyControllerWithClassLevelInterceptors,
-        'greetStaticWithDI',
-        ctx,
-      );
+      const msg = await invokeMethod(MyController, 'greetStaticWithDI', ctx);
       expect(msg).to.equal('Hello, John');
       expect(events).to.eql([
         'globalLog: before-greetStaticWithDI',
@@ -461,108 +624,8 @@ describe('Interceptor', () => {
     }
   }
 
-  class MyController {
-    // Apply `logSync` to a sync instance method
-    @intercept(logSync)
-    greetSync(name: string) {
-      return `Hello, ${name}`;
-    }
-
-    // Apply `log` to a sync instance method
-    @intercept(log)
-    greet(name: string) {
-      return `Hello, ${name}`;
-    }
-
-    // Apply `log` as a binding key to an async instance method
-    @intercept('log')
-    async greetWithABoundInterceptor(name: string) {
-      return `Hello, ${name}`;
-    }
-
-    // Apply `log` to an async instance method with parameter injection
-    @intercept(log)
-    async greetWithDI(@inject('name') name: string) {
-      return `Hello, ${name}`;
-    }
-
-    // Apply `log` and `logSync` to an async instance method
-    @intercept('log', logSync)
-    async greetWithTwoInterceptors(name: string) {
-      return `Hello, ${name}`;
-    }
-
-    // No interceptors are attached
-    async greetWithoutInterceptors(name: string) {
-      return `Hello, ${name}`;
-    }
-
-    // Apply `convertName` to convert `name` arg to upper case
-    @intercept(convertName)
-    async greetWithUpperCaseName(name: string) {
-      return `Hello, ${name}`;
-    }
-
-    // Apply `name-validator` backed by a provider class
-    @intercept('name-validator')
-    async greetWithNameValidation(name: string) {
-      return `Hello, ${name}`;
-    }
-
-    // Apply `logError` to catch errors
-    @intercept(logError)
-    async greetWithError(name: string) {
-      throw new Error('error: ' + name);
-    }
-  }
-
-  class MyControllerWithStaticMethods {
-    // Apply `log` to a static method
-    @intercept(log)
-    static async greetStatic(name: string) {
-      return `Hello, ${name}`;
-    }
-
-    // Apply `log` to a static method with parameter injection
-    @intercept(log)
-    static async greetStaticWithDI(@inject('name') name: string) {
-      return `Hello, ${name}`;
-    }
-  }
-
-  // Apply `log` to all methods on the class
-  @intercept(log)
-  class MyControllerWithClassLevelInterceptors {
-    // The class level `log` will be applied
-    static async greetStatic(name: string) {
-      return `Hello, ${name}`;
-    }
-
-    @intercept(log)
-    static async greetStaticWithDI(@inject('name') name: string) {
-      return `Hello, ${name}`;
-    }
-
-    // We can apply `@intercept` multiple times on the same method
-    // This is needed if a custom decorator is created for `@intercept`
-    @intercept(log)
-    @intercept(logSync)
-    greetSync(name: string) {
-      return `Hello, ${name}`;
-    }
-
-    // Apply multiple interceptors. The order of `log` will be preserved as it
-    // explicitly listed at method level
-    @intercept(convertName, log)
-    async greet(name: string) {
-      return `Hello, ${name}`;
-    }
-  }
-
-  function givenContextAndController() {
+  function givenContextAndEvents() {
     ctx = new Context();
     events = [];
-    controller = new MyController();
-    controllerWithClassInterceptors = new MyControllerWithClassLevelInterceptors();
   }
 });
