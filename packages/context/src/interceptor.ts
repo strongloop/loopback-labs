@@ -214,7 +214,10 @@ export function intercept(...interceptorOrKeys: InterceptorOrKey[]) {
   return function interceptDecoratorForClassOrMethod(
     target: ClassOrPrototype,
     method?: string,
-    methodDescriptor?: TypedPropertyDescriptor<unknown>,
+    // Use `any` to for `TypedPropertyDescriptor`
+    // See https://github.com/strongloop/loopback-next/pull/2704
+    // tslint:disable-next-line:no-any
+    methodDescriptor?: TypedPropertyDescriptor<any>,
   ) {
     if (method && methodDescriptor) {
       // Method
