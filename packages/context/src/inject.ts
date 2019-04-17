@@ -405,12 +405,12 @@ function resolveAsGetter(
   const bindingSelector = injection.bindingSelector as BindingAddress;
   // We need to clone the session for the getter as it will be resolved later
   const forkedSession = ResolutionSession.fork(session);
+  const options: ResolutionOptions = {
+    session: forkedSession,
+    ...injection.metadata,
+  };
   return function getter() {
-    return ctx.get(bindingSelector, {
-      session: forkedSession,
-      optional: injection.metadata.optional,
-      asProxyWithInterceptors: injection.metadata.asProxyWithInterceptors,
-    });
+    return ctx.get(bindingSelector, options);
   };
 }
 

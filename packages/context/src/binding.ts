@@ -6,7 +6,7 @@
 import * as debugFactory from 'debug';
 import {BindingAddress, BindingKey} from './binding-key';
 import {Context} from './context';
-import {createProxyWithInterceptors} from './interceptor';
+import {createProxyWithInterceptors} from './interception-proxy';
 import {Provider} from './provider';
 import {
   asResolutionOptions,
@@ -507,14 +507,7 @@ export class Binding<T = BoundValue> {
     this._setValueGetter((ctx, options) => {
       const instOrPromise = instantiateClass(ctor, ctx, options.session);
       if (!options.asProxyWithInterceptors) return instOrPromise;
-      return transformValueOrPromise(instOrPromise, inst => {
-        if (typeof inst !== 'object') return inst;
-        return (createProxyWithInterceptors(
-          // Cast inst from `T` to `object`
-          (inst as unknown) as object,
-          ctx,
-        ) as unknown) as T;
-      });
+      return createInterceptionProxyFromInstance(instOrPromise, ctx);
     });
     this._valueConstructor = ctor;
     return this;
@@ -589,4 +582,18 @@ export class Binding<T = BoundValue> {
   static bind<T = unknown>(key: BindingAddress<T>): Binding<T> {
     return new Binding(key.toString());
   }
+}
+
+function createInterceptionProxyFromInstance<T>(
+  instOrPromise: ValueOrPromise<T>,
+  context: Context,
+) {
+  return transformValueOrPromise(instOrPromise, inst => {
+    if (typeof inst !== 'object') return inst;
+    return (createProxyWithInterceptors(
+      // Cast inst from `T` to `object`
+      (inst as unknown) as object,
+      context,
+    ) as unknown) as T;
+  });
 }

@@ -19,14 +19,20 @@ import {BindingAddress} from './binding-key';
 import {Context} from './context';
 import {ContextTags} from './keys';
 import {transformValueOrPromise, ValueOrPromise} from './value-promise';
-const debug = debugFactory('loopback:context:intercept');
+const debug = debugFactory('loopback:context:interceptor');
 const getTargetName = DecoratorFactory.getTargetName;
 
 /**
- * Array of arguments
+ * Array of arguments for a method invocation
  */
 // tslint:disable-next-line:no-any
 export type InvocationArgs = any[];
+
+/**
+ * Return value for a method invocation
+ */
+// tslint:disable-next-line:no-any
+export type InvocationResult = any;
 
 /**
  * A type for class or its prototype
@@ -43,7 +49,8 @@ export class InvocationContext extends Context {
   /**
    * Construct a new instance of `InvocationContext`
    * @param parent Parent context, such as the RequestContext
-   * @param target Target class (for static methods) or object (for instance methods)
+   * @param target Target class (for static methods) or prototype/object
+   * (for instance methods)
    * @param methodName Method name
    * @param args An array of arguments
    */
@@ -57,10 +64,13 @@ export class InvocationContext extends Context {
   }
 
   /**
-   * Discover all binding keys for global interceptors
+   * Discover all binding keys for global interceptors (tagged by
+   * ContextTags.GLOBAL_INTERCEPTOR)
    */
   getGlobalInterceptorBindingKeys(): string[] {
-    return this.find(filterByTag(ContextTags.INTERCEPTOR)).map(b => b.key);
+    return this.find(filterByTag(ContextTags.GLOBAL_INTERCEPTOR)).map(
+      b => b.key,
+    );
   }
 }
 
@@ -69,22 +79,28 @@ export class InvocationContext extends Context {
  * by tagging it with `ContextTags.INTERCEPTOR`
  * @param binding Binding object
  */
-export function asInterceptor(binding: Binding<unknown>) {
-  return binding.tag(ContextTags.INTERCEPTOR);
+export function asGlobalInterceptor(binding: Binding<unknown>) {
+  return binding.tag(ContextTags.GLOBAL_INTERCEPTOR);
 }
 
 /**
- * Interceptor function
+ * Interceptor function to intercept method invocations
  */
 export interface Interceptor {
-  <T = unknown>(
+  /**
+   * @param context Invocation context
+   * @param next A function to invoke next interceptor or the target method
+   * @returns A result as value or promise
+   */
+  (
     context: InvocationContext,
-    next: () => ValueOrPromise<T>,
-  ): ValueOrPromise<T>;
+    next: () => ValueOrPromise<InvocationResult>,
+  ): ValueOrPromise<InvocationResult>;
 }
 
 /**
- * Interceptor or binding key that can be used as arguments for `@intercept`
+ * Interceptor function or binding key that can be used as parameters for
+ * `@intercept()`
  */
 export type InterceptorOrKey = BindingAddress<Interceptor> | Interceptor;
 
@@ -98,7 +114,7 @@ export const INTERCEPT_METHOD_KEY = MetadataAccessor.create<
 
 /**
  * Adding interceptors from the spec to the front of existing ones. Duplicate
- * entries are eliminated.
+ * entries are eliminated from the spec side.
  *
  * For example:
  *
@@ -108,10 +124,10 @@ export const INTERCEPT_METHOD_KEY = MetadataAccessor.create<
  * - [cache, log] + [] => [cache, log]
  * - [log] + [cache] => [log, cache]
  *
- * @param interceptorsFromSpec
- * @param existingInterceptors
+ * @param interceptorsFromSpec Interceptors from `@intercept`
+ * @param existingInterceptors Interceptors already applied for the method
  */
-function mergeInterceptors(
+export function mergeInterceptors(
   interceptorsFromSpec: InterceptorOrKey[],
   existingInterceptors: InterceptorOrKey[],
 ) {
@@ -138,6 +154,10 @@ export const INTERCEPT_CLASS_KEY = MetadataAccessor.create<
   ClassDecorator
 >('intercept:class');
 
+/**
+ * A factory to define `@intercept` for classes. It allows `@intercept` to be
+ * used multiple times on the same class.
+ */
 class InterceptClassDecoratorFactory extends ClassDecoratorFactory<
   InterceptorOrKey[]
 > {
@@ -147,6 +167,10 @@ class InterceptClassDecoratorFactory extends ClassDecoratorFactory<
   }
 }
 
+/**
+ * A factory to define `@intercept` for methods. It allows `@intercept` to be
+ * used multiple times on the same method.
+ */
 class InterceptMethodDecoratorFactory extends MethodDecoratorFactory<
   InterceptorOrKey[]
 > {
@@ -217,21 +241,16 @@ export function intercept(...interceptorOrKeys: InterceptorOrKey[]) {
 /**
  * Invoke a method with the given context
  * @param context Context object
- * @param Target Target class (for static methods) or object (for instance methods)
+ * @param target Target class (for static methods) or object (for instance methods)
  * @param methodName Method name
- * @param args Argument values
+ * @param args An array of argument values
  */
 export function invokeMethodWithInterceptors(
   context: Context,
   target: object,
   methodName: string,
   args: InvocationArgs,
-) {
-  const targetWithMethods = target as Record<string, Function>;
-  assert(
-    typeof targetWithMethods[methodName] === 'function',
-    `Method ${methodName} not found`,
-  );
+): ValueOrPromise<InvocationResult> {
   const invocationCtx = new InvocationContext(
     context,
     target,
@@ -239,31 +258,79 @@ export function invokeMethodWithInterceptors(
     args,
   );
 
+  assertMethodExists(invocationCtx);
+  const interceptors = loadInterceptors(invocationCtx);
+  return invokeInterceptors(invocationCtx, interceptors);
+}
+
+/**
+ * Load all interceptors for the given invocation context. It adds
+ * interceptors from possibly three sources:
+ * 1. method level `@intercept`
+ * 2. class level `@intercept`
+ * 3. global interceptors discovered in the context
+ *
+ * @param invocationCtx Invocation context
+ */
+function loadInterceptors(invocationCtx: InvocationContext) {
   let interceptors =
     MetadataInspector.getMethodMetadata(
       INTERCEPT_METHOD_KEY,
-      target,
-      methodName,
+      invocationCtx.target,
+      invocationCtx.methodName,
     ) || [];
-
-  let targetClass: Function;
-  if (typeof target === 'function') {
-    targetClass = target;
-  } else {
-    targetClass = target.constructor;
-  }
+  const targetClass =
+    typeof invocationCtx.target === 'function'
+      ? invocationCtx.target
+      : invocationCtx.target.constructor;
   const classInterceptors =
     MetadataInspector.getClassMetadata(INTERCEPT_CLASS_KEY, targetClass) || [];
-
   // Inserting class level interceptors before method level ones
   interceptors = mergeInterceptors(classInterceptors, interceptors);
-
   const globalInterceptors = invocationCtx.getGlobalInterceptorBindingKeys();
-
   // Inserting global interceptors
   interceptors = mergeInterceptors(globalInterceptors, interceptors);
+  return interceptors;
+}
 
-  return invokeInterceptors(invocationCtx, interceptors);
+/**
+ * Invoke the target method with the given context
+ * @param context Invocation context
+ */
+function invokeTargetMethod(context: InvocationContext) {
+  const targetWithMethods = assertMethodExists(context);
+  /* istanbul ignore if */
+  if (debug.enabled) {
+    debug(
+      'Invoking method %s',
+      getTargetName(context.target, context.methodName),
+      context.args,
+    );
+  }
+  // Invoke the target method
+  const result = targetWithMethods[context.methodName](...context.args);
+  /* istanbul ignore if */
+  if (debug.enabled) {
+    debug(
+      'Method invoked: %s',
+      getTargetName(context.target, context.methodName),
+      result,
+    );
+  }
+  return result;
+}
+
+/**
+ * Assert the method exists on the target. An error will be thrown if otherwise.
+ * @param context Invocation context
+ */
+function assertMethodExists(context: InvocationContext) {
+  const targetWithMethods = context.target as Record<string, Function>;
+  if (typeof targetWithMethods[context.methodName] !== 'function') {
+    const targetName = getTargetName(context.target, context.methodName);
+    assert(false, `Method ${targetName} not found`);
+  }
+  return targetWithMethods;
 }
 
 /**
@@ -274,127 +341,52 @@ export function invokeMethodWithInterceptors(
 function invokeInterceptors(
   context: InvocationContext,
   interceptors: InterceptorOrKey[],
-) {
+): ValueOrPromise<InvocationResult> {
   let index = 0;
-  const next: <T>() => ValueOrPromise<T> = () => {
+  return next();
+
+  /**
+   * Invoke downstream interceptors or the target method
+   */
+  function next(): ValueOrPromise<InvocationResult> {
     // No more interceptors
     if (index === interceptors.length) {
-      const targetWithMethods = context.target as Record<string, Function>;
-      assert(
-        typeof targetWithMethods[context.methodName] === 'function',
-        `Method ${context.methodName} not found`,
-      );
-      /* istanbul ignore if */
-      if (debug.enabled) {
-        debug(
-          'Invoking method %s',
-          getTargetName(context.target, context.methodName),
-          context.args,
-        );
-      }
-      // Invoke the target method
-      return targetWithMethods[context.methodName](...context.args);
+      return invokeTargetMethod(context);
     }
+    return invokeNextInterceptor();
+  }
+
+  /**
+   * Invoke downstream interceptors
+   */
+  function invokeNextInterceptor(): ValueOrPromise<InvocationResult> {
     const interceptor = interceptors[index++];
-    let interceptorFn: ValueOrPromise<Interceptor>;
-    if (typeof interceptor !== 'function') {
-      debug('Resolving interceptor binding %s', interceptor);
-      interceptorFn = context.getValueOrPromise(interceptor) as ValueOrPromise<
-        Interceptor
-      >;
-    } else {
-      interceptorFn = interceptor;
-    }
+    const interceptorFn = loadInterceptor(interceptor);
     return transformValueOrPromise(interceptorFn, fn => {
       /* istanbul ignore if */
       if (debug.enabled) {
         debug(
-          'Invoking interceptor %d on %s',
+          'Invoking interceptor %d (%s) on %s',
           index - 1,
+          fn.name,
           getTargetName(context.target, context.methodName),
           context.args,
         );
       }
       return fn(context, next);
     });
-  };
-  return next();
-}
-
-/**
- * The Promise type for `T`. If `T` extends `Promise`, the type is `T`,
- * otherwise the type is `Promise<T>`.
- */
-export type PromiseType<T> = T extends Promise<unknown> ? T : Promise<T>;
-
-/**
- * The async variant of a function to always return Promise<R>. If T is not a
- * function, the type is `T`.
- */
-// tslint:disable-next-line:no-unused (possible tslint bug to treat `R` as unused)
-export type AsyncType<T> = T extends (...args: InvocationArgs) => infer R
-  ? (...args: InvocationArgs) => PromiseType<R>
-  : T;
-
-/**
- * The proxy type for `T`. The return type for any method of `T` with original
- * return type `R` becomes `Promise<R>` if `R` does not extend `Promise`.
- * Property types stay untouched. For example:
- *
- * ```ts
- * class MyController {
- *   name: string;
- *
- *   greet(name: string): string {
- *     return `Hello, ${name}`;
- *   }
- *
- *   async hello(name: string) {
- *     return `Hello, ${name}`;
- *   }
- * }
- * ```
- *
- * `AsyncProxy<MyController>` will be:
- * ```ts
- * {
- *   name: string; // the same as MyController
- *   greet(name: string): Promise<string>; // the return type becomes `Promise<string>`
- *   hello(name: string): Promise<string>; // the same as MyController
- * }
- * ```
- */
-export type AsyncProxy<T> = {[P in keyof T]: AsyncType<T[P]>};
-
-/**
- * A proxy handler that applies interceptors
- *
- * See https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Global_Objects/Proxy
- */
-export class InterceptorHandler<T extends object> implements ProxyHandler<T> {
-  constructor(private context = new Context()) {}
-  get(target: T, p: PropertyKey, receiver: unknown) {
-    const targetObj = target as ClassOrPrototype;
-    if (typeof p !== 'string') return targetObj[p];
-    const propertyOrMethod = targetObj[p];
-    if (typeof propertyOrMethod === 'function') {
-      return (...args: InvocationArgs) => {
-        return invokeMethodWithInterceptors(this.context, target, p, args);
-      };
-    } else {
-      return propertyOrMethod;
-    }
   }
-}
 
-/**
- * Create a proxy that applies interceptors for method invocations
- * @param target Target class or object
- * @param context Context object
- */
-export function createProxyWithInterceptors<T extends object>(
-  target: T,
-  context?: Context,
-): AsyncProxy<T> {
-  return new Proxy(target, new InterceptorHandler(context)) as AsyncProxy<T>;
+  /**
+   * Return the interceptor function or resolve the interceptor function as a
+   * binding from the context
+   * @param interceptor Interceptor function or binding key
+   */
+  function loadInterceptor(interceptor: InterceptorOrKey) {
+    if (typeof interceptor === 'function') return interceptor;
+    debug('Resolving interceptor binding %s', interceptor);
+    return context.getValueOrPromise(interceptor) as ValueOrPromise<
+      Interceptor
+    >;
+  }
 }

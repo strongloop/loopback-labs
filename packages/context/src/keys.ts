@@ -27,5 +27,5 @@ export namespace ContextTags {
   /**
    * Binding tag for global interceptors
    */
-  export const INTERCEPTOR = 'interceptor';
+  export const GLOBAL_INTERCEPTOR = 'globalInterceptor';
 }

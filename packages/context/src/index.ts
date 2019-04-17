@@ -13,6 +13,7 @@ export * from './context';
 export * from './context-observer';
 export * from './context-view';
 export * from './inject';
+export * from './interception-proxy';
 export * from './interceptor';
 export * from './keys';
 export * from './provider';

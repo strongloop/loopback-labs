@@ -5,10 +5,8 @@
 
 import {expect} from '@loopback/testlab';
 import {
-  asInterceptor,
-  AsyncProxy,
+  asGlobalInterceptor,
   Context,
-  createProxyWithInterceptors,
   inject,
   intercept,
   Interceptor,
@@ -95,7 +93,7 @@ describe('Interceptor', () => {
       'John',
     ]);
     expect(msg).to.equal('Hello, John');
-    expect(
+    await expect(
       invokeMethodWithInterceptors(ctx, controller, 'greet', ['Smith']),
     ).to.be.rejectedWith(/Name 'Smith' is not on the list/);
   });
@@ -339,129 +337,6 @@ describe('Interceptor', () => {
     });
   });
 
-  context('proxy with interceptors', () => {
-    it('invokes async interceptors on an async method', async () => {
-      // Apply `log` to all methods on the class
-      @intercept(log)
-      class MyController {
-        // Apply multiple interceptors. The order of `log` will be preserved as it
-        // explicitly listed at method level
-        @intercept(convertName, log)
-        async greet(name: string) {
-          return `Hello, ${name}`;
-        }
-      }
-      const proxy = createProxyWithInterceptors(new MyController(), ctx);
-      const msg = await proxy.greet('John');
-      expect(msg).to.equal('Hello, JOHN');
-      expect(events).to.eql([
-        'convertName: before-greet',
-        'log: before-greet',
-        'log: after-greet',
-        'convertName: after-greet',
-      ]);
-    });
-
-    it('creates a proxy that converts sync method to be async', async () => {
-      // Apply `log` to all methods on the class
-      @intercept(log)
-      class MyController {
-        // Apply multiple interceptors. The order of `log` will be preserved as it
-        // explicitly listed at method level
-        @intercept(convertName, log)
-        greet(name: string) {
-          return `Hello, ${name}`;
-        }
-      }
-      const proxy = createProxyWithInterceptors(new MyController(), ctx);
-      const msg = await proxy.greet('John');
-      expect(msg).to.equal('Hello, JOHN');
-      expect(events).to.eql([
-        'convertName: before-greet',
-        'log: before-greet',
-        'log: after-greet',
-        'convertName: after-greet',
-      ]);
-    });
-
-    it('invokes interceptors on a static method', async () => {
-      // Apply `log` to all methods on the class
-      @intercept(log)
-      class MyController {
-        // The class level `log` will be applied
-        static greetStatic(name: string) {
-          return `Hello, ${name}`;
-        }
-      }
-      ctx.bind('name').to('John');
-      const proxy = createProxyWithInterceptors(MyController, ctx);
-      const msg = await proxy.greetStatic('John');
-      expect(msg).to.equal('Hello, John');
-      expect(events).to.eql([
-        'log: before-greetStatic',
-        'log: after-greetStatic',
-      ]);
-    });
-
-    it('supports asProxyWithInterceptors resolution option', async () => {
-      // Apply `log` to all methods on the class
-      @intercept(log)
-      class MyController {
-        // Apply multiple interceptors. The order of `log` will be preserved as it
-        // explicitly listed at method level
-        @intercept(convertName, log)
-        async greet(name: string) {
-          return `Hello, ${name}`;
-        }
-      }
-      ctx.bind('my-controller').toClass(MyController);
-      const proxy = await ctx.get<MyController>('my-controller', {
-        asProxyWithInterceptors: true,
-      });
-      const msg = await proxy!.greet('John');
-      expect(msg).to.equal('Hello, JOHN');
-      expect(events).to.eql([
-        'convertName: before-greet',
-        'log: before-greet',
-        'log: after-greet',
-        'convertName: after-greet',
-      ]);
-    });
-
-    it('supports asProxyWithInterceptors resolution option for @inject', async () => {
-      // Apply `log` to all methods on the class
-      @intercept(log)
-      class MyController {
-        // Apply multiple interceptors. The order of `log` will be preserved as it
-        // explicitly listed at method level
-        @intercept(convertName, log)
-        async greet(name: string) {
-          return `Hello, ${name}`;
-        }
-      }
-
-      class DummyController {
-        constructor(
-          @inject('my-controller', {asProxyWithInterceptors: true})
-          public readonly myController: AsyncProxy<MyController>,
-        ) {}
-      }
-      ctx.bind('my-controller').toClass(MyController);
-      ctx.bind('dummy-controller').toClass(DummyController);
-      const dummyController = await ctx.get<DummyController>(
-        'dummy-controller',
-      );
-      const msg = await dummyController.myController.greet('John');
-      expect(msg).to.equal('Hello, JOHN');
-      expect(events).to.eql([
-        'convertName: before-greet',
-        'log: before-greet',
-        'log: after-greet',
-        'convertName: after-greet',
-      ]);
-    });
-  });
-
   context('global interceptors', () => {
     beforeEach(givenGlobalInterceptor);
 
@@ -576,7 +451,7 @@ describe('Interceptor', () => {
       ctx
         .bind('globalLog')
         .to(globalLog)
-        .apply(asInterceptor);
+        .apply(asGlobalInterceptor);
     }
   });
 

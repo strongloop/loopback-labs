@@ -72,8 +72,8 @@ const msg = await proxy.greet('John');
 ```
 
 There is also an `asProxyWithInterceptors` option for binding resolution or
-dependency injection to return a proxy to apply interceptors as methods are
-invoked.
+dependency injection to return a proxy for the class to apply interceptors when
+methods are invoked.
 
 ```ts
 class DummyController {
@@ -92,10 +92,38 @@ const msg = await dummyController.myController.greet('John');
 Or:
 
 ```ts
-const proxy = await ctx.get<MyController>(
-  'my-controller',
-  {asProxyWithInterceptors: true},
+const proxy = await ctx.get<MyController>('my-controller', {
+  asProxyWithInterceptors: true,
+});
 const msg = await proxy.greet('John');
+```
+
+Please note synchronous methods (which don't return `Promise`) are converted to
+be asynchronous in the proxy so that interceptors can be applied. For example,
+
+```ts
+class MyController {
+  name: string;
+
+  greet(name: string): string {
+    return `Hello, ${name}`;
+  }
+
+  async hello(name: string) {
+    return `Hello, ${name}`;
+  }
+}
+```
+
+The proxy from an instance of `MyController` has the `AsyncProxy<MyController>`
+type:
+
+```ts
+{
+  name: string; // the same as MyController
+  greet(name: string): Promise<string>; // the return type becomes `Promise<string>`
+  hello(name: string): Promise<string>; // the same as MyController
+}
 ```
 
 ### Use `invokeMethod` to apply interceptors
@@ -129,7 +157,7 @@ used by `invokeMethod` or `invokeWithMethodWithInterceptors` functions to
 trigger interceptors around the target method. The original method stays intact.
 Invoking it directly won't apply any interceptors.
 
-### @intercept
+### `@intercept`
 
 Syntax: `@intercept(...interceptorFunctionsOrBindingKeys)`
 

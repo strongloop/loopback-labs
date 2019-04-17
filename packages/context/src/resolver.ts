@@ -16,7 +16,7 @@ import {
   Injection,
 } from './inject';
 import {invokeMethodWithInterceptors} from './interceptor';
-import {ResolutionSession} from './resolution-session';
+import {ResolutionOptions, ResolutionSession} from './resolution-session';
 import {
   BoundValue,
   Constructor,
@@ -149,13 +149,11 @@ function resolve<T>(
           'The binding selector must be an address (string or BindingKey)',
         );
         const key = injection.bindingSelector as BindingAddress;
-        return ctx.getValueOrPromise(key, {
+        const options: ResolutionOptions = {
           session: s,
-          // If the `optional` flag is set for the injection, the resolution
-          // will return `undefined` instead of throwing an error
-          optional: injection.metadata.optional,
-          asProxyWithInterceptors: injection.metadata.asProxyWithInterceptors,
-        });
+          ...injection.metadata,
+        };
+        return ctx.getValueOrPromise(key, options);
       }
     },
     injection,
