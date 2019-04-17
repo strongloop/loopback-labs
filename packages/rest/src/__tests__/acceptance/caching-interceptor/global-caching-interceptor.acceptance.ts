@@ -3,7 +3,7 @@
 // This file is licensed under the MIT License.
 // License text available at https://opensource.org/licenses/MIT
 
-import {asInterceptor} from '@loopback/context';
+import {asGlobalInterceptor} from '@loopback/context';
 import {anOperationSpec} from '@loopback/openapi-spec-builder';
 import {get, param} from '@loopback/openapi-v3';
 import {
@@ -29,7 +29,7 @@ describe('global caching interceptor', () => {
     await app.stop();
   });
 
-  context('toUpperCase', () => {
+  context('caching invocation for controller methods', () => {
     it('invokes the controller method if not cached', async () => {
       await client.get('/toUpperCase/Hello').expect(200, 'HELLO');
       expect(status.returnFromCache).to.be.false();
@@ -49,7 +49,7 @@ describe('global caching interceptor', () => {
     });
   });
 
-  context('toLowerCase', () => {
+  context('caching invocation for route handler functions', () => {
     it('invokes the handler function if not cached', async () => {
       await client.get('/toLowerCase/Hello').expect(200, 'hello');
       expect(status.returnFromCache).to.be.false();
@@ -98,7 +98,7 @@ describe('global caching interceptor', () => {
     app
       .bind('caching-interceptor')
       .toProvider(CachingInterceptorProvider)
-      .apply(asInterceptor);
+      .apply(asGlobalInterceptor);
     app.controller(StringCaseController);
     app.route(
       'get',

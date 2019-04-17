@@ -20,8 +20,7 @@ export const status = {
 };
 
 /**
- * An interceptor function that caches results. It uses `invocationContext`
- * to locate the http request
+ * In-memory cache
  */
 export const cachedResults = new Map<string, unknown>();
 
@@ -46,33 +45,14 @@ export class CachingInterceptorProvider implements Provider<Interceptor> {
     return <T>(
       invocationCtx: InvocationContext,
       next: () => ValueOrPromise<T>,
-    ) => this.intercept(invocationCtx, next);
-  }
-
-  async intercept<T>(
-    invocationCtx: InvocationContext,
-    next: () => ValueOrPromise<T>,
-  ) {
-    status.returnFromCache = false;
-
-    if (!this.request) {
-      // The method is not invoked by an http request, no caching
-      return await next();
-    }
-    const url = this.request.url;
-    const cachedValue = cachedResults.get(url);
-    if (cachedValue) {
-      status.returnFromCache = true;
-      return cachedValue as T;
-    }
-    const result = await next();
-    cachedResults.set(url, result);
-    return result;
+    ) => cache(invocationCtx, next);
   }
 }
 
 /**
- * An interceptor function for caching
+ * An interceptor function that caches results. It uses `invocationContext`
+ * to locate the http request
+ *
  * @param invocationCtx
  * @param next
  */

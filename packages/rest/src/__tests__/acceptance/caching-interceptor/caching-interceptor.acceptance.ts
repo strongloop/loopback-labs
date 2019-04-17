@@ -14,7 +14,6 @@ import {
 import {RestApplication} from '../../..';
 import {
   cache,
-  cachedResults,
   CachingInterceptorProvider,
   clearCache,
   status,
@@ -29,48 +28,39 @@ describe('caching interceptor', () => {
     await app.stop();
   });
 
-  context('toUpperCase with bound caching interceptor', () => {
+  beforeEach(clearCache);
+
+  context('as a binding key', () => {
     it('invokes the controller method if not cached', async () => {
       await client.get('/toUpperCase/Hello').expect(200, 'HELLO');
       expect(status.returnFromCache).to.be.false();
     });
 
     it('returns from cache without invoking the controller method', async () => {
+      await client.get('/toUpperCase/Hello').expect(200, 'HELLO');
       for (let i = 0; i <= 5; i++) {
         await client.get('/toUpperCase/Hello').expect(200, 'HELLO');
         expect(status.returnFromCache).to.be.true();
       }
     });
-
-    it('invokes the controller method after cache is cleared', async () => {
-      clearCache();
-      await client.get('/toUpperCase/Hello').expect(200, 'HELLO');
-      expect(status.returnFromCache).to.be.false();
-    });
   });
 
-  context('toLowerCase with cache interceptor function', () => {
+  context('as an interceptor function', () => {
     it('invokes the controller method if not cached', async () => {
       await client.get('/toLowerCase/Hello').expect(200, 'hello');
       expect(status.returnFromCache).to.be.false();
     });
 
     it('returns from cache without invoking the controller method', async () => {
+      await client.get('/toLowerCase/Hello').expect(200, 'hello');
       for (let i = 0; i <= 5; i++) {
         await client.get('/toLowerCase/Hello').expect(200, 'hello');
         expect(status.returnFromCache).to.be.true();
       }
     });
-
-    it('invokes the controller method after cache is cleared', async () => {
-      cachedResults.clear();
-      await client.get('/toLowerCase/Hello').expect(200, 'hello');
-      expect(status.returnFromCache).to.be.false();
-    });
   });
 
   async function givenAClient() {
-    clearCache();
     app = new RestApplication({rest: givenHttpServerConfig()});
     app.bind('caching-interceptor').toProvider(CachingInterceptorProvider);
     app.controller(StringCaseController);
