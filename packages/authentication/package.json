@@ -1,6 +1,6 @@
 {
   "name": "@loopback/authentication",
-  "version": "1.2.1",
+  "version": "2.0.0",
   "description": "A LoopBack component for authentication support.",
   "engines": {
     "node": ">=8.9"
@@ -36,7 +36,8 @@
     "@types/node": "^10.11.2",
     "@types/passport": "^1.0.0",
     "@types/passport-http": "^0.3.6",
-    "passport-http": "^0.3.0"
+    "passport-http": "^0.3.0",
+    "jsonwebtoken": "^8.5.1"
   },
   "keywords": [
     "LoopBack",
