@@ -18,6 +18,11 @@ method invocations. There are many use cases for interceptors, such as:
 - Catch/transform errors, for example, normalize error objects
 - Override the method invocation, for example, return from cache
 
+The following diagram illustrates how interceptors can be applied to the
+invocation of a method on the controller class.
+
+![Interceptors](imgs/interceptors.png)
+
 ## Basic use
 
 ### Interceptors on controllers
@@ -31,14 +36,17 @@ interceptors for corresponding routes upon API requests.
 ```ts
 import {intercept} from '@loopback/context';
 
-@intercept(log)
+@intercept(log) // `log` is an interceptor function
 export class OrderController {
-  @intercept('caching-interceptor')
+  @intercept('caching-interceptor') // `caching-interceptor` is a binding key
   async listOrders(userId: string) {
     // ...
   }
 }
 ```
+
+**NOTE**: `log` and `'caching-interceptor'` are illustrated in
+[Example interceptors](#example-interceptors).
 
 It's also possible to configure global interceptors that are invoked before
 method level interceptors. For example, the following code registers a global
