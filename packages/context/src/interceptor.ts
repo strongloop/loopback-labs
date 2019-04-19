@@ -262,8 +262,12 @@ export function invokeMethodWithInterceptors(
   );
 
   assertMethodExists(invocationCtx);
-  const interceptors = loadInterceptors(invocationCtx);
-  return invokeInterceptors(invocationCtx, interceptors);
+  try {
+    const interceptors = loadInterceptors(invocationCtx);
+    return invokeInterceptors(invocationCtx, interceptors);
+  } finally {
+    invocationCtx.close();
+  }
 }
 
 /**
