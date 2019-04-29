@@ -26,7 +26,6 @@ import {
   AuthenticationComponent,
   UserProfile,
 } from '../..';
-import {AuthenticationStrategyNotFoundError} from '../../types';
 import {JWTAuthenticationStrategyBindings, USER_REPO} from '../fixtures/keys';
 import {JWTService} from '../fixtures/services/jwt-service';
 import {JWTAuthenticationStrategy} from '../fixtures/strategies/jwt-strategy';
@@ -433,7 +432,7 @@ describe('JWT Authentication', () => {
             await this.authenticateRequest(request);
           } catch (e) {
             // strategy not found error
-            if (e instanceof AuthenticationStrategyNotFoundError) {
+            if (e.code === 'AUTHENTICATION_STRATEGY_NOT_FOUND') {
               throw new HttpErrors.Unauthorized(e.message);
             } //if
             else {

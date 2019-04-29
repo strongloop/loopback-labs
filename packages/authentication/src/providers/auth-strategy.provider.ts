@@ -14,7 +14,7 @@ import {AuthenticationMetadata} from '../decorators/authenticate.decorator';
 import {AuthenticationBindings} from '../keys';
 import {
   AuthenticationStrategy,
-  AuthenticationStrategyNotFoundError,
+  AUTHENTICATION_STRATEGY_NOT_FOUND,
 } from '../types';
 
 //this needs to be transient, e.g. for request level context.
@@ -41,9 +41,11 @@ export class AuthenticationStrategyProvider
         return strategy;
       } else {
         // important not to throw a non-protocol-specific error here
-        throw new AuthenticationStrategyNotFoundError(
-          `The strategy '${name}' is not available.`,
-        );
+        let error = new Error(`The strategy '${name}' is not available.`);
+        Object.assign(error, {
+          code: AUTHENTICATION_STRATEGY_NOT_FOUND,
+        });
+        throw error;
       }
     });
   }

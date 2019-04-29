@@ -173,7 +173,8 @@ as described in the
 [Greeter extension example](https://github.com/strongloop/loopback-next/tree/master/examples/greeter-extension).
 
 The `AuthenticationStrategyProvider` class in
-`src/providers/auth-strategy.provider.ts` (shown below) declares an `extension point` named
+`src/providers/auth-strategy.provider.ts` (shown below) declares an
+`extension point` named
 `AuthenticationBindings.AUTHENTICATION_STRATEGY_EXTENSION_POINT_NAME` via the
 `@extensionPoint` decorator. The binding scope is set to **transient** because
 an authentication strategy **may** differ with each request.

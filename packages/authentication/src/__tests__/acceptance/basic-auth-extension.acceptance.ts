@@ -28,11 +28,12 @@ import {
   AuthenticationComponent,
   UserProfile,
 } from '../..';
-import {AuthenticationStrategyNotFoundError} from '../../types';
+import {AUTHENTICATION_STRATEGY_NOT_FOUND} from '../../types';
 import {BasicAuthenticationStrategyBindings, USER_REPO} from '../fixtures/keys';
 import {BasicAuthenticationUserService} from '../fixtures/services/basic-auth-user-service';
 import {BasicAuthenticationStrategy} from '../fixtures/strategies/basic-strategy';
 import {UserRepository} from '../fixtures/users/user.repository';
+
 const SequenceActions = RestBindings.SequenceActions;
 
 describe('Basic Authentication', () => {
@@ -223,7 +224,7 @@ describe('Basic Authentication', () => {
             await this.authenticateRequest(request);
           } catch (e) {
             // strategy not found error
-            if (e instanceof AuthenticationStrategyNotFoundError) {
+            if (e.code === AUTHENTICATION_STRATEGY_NOT_FOUND) {
               throw new HttpErrors.Unauthorized(e.message);
             } //if
             else {
