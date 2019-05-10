@@ -19,6 +19,7 @@ packages/metadata/* @raymondfeng
 packages/openapi-spec-builder/* @bajtos @raymondfeng
 packages/openapi-v3/* @bajtos @jannyHou
 packages/openapi-v3-types/* @bajtos @jannyHou
+packages/passport-adapter/* @jannyHou @emonddr
 packages/repository/* @raymondfeng
 packages/repository-json-schema/* @bajtos
 packages/rest/* @bajtos @raymondfeng
