@@ -27,6 +27,7 @@
         "packages/openapi-spec-builder/package.json",
         "packages/openapi-v3-types/package.json",
         "packages/openapi-v3/package.json",
+        "packages/passport-adapter/package.json",
         "packages/repository-json-schema/package.json",
         "packages/repository/package.json",
         "packages/rest-explorer/package.json",
@@ -37,6 +38,5 @@
         "sandbox/example/package.json"
       ]
     }
-  },
-  "ignore": ["@types/node"]
+  }
 }
