@@ -11,6 +11,9 @@ Experimental features for
 
 ## Contributing
 
+Check out [LABS.md](./LABS.md) to understand the workflow to develop
+experimental features in `loopback-labs`.
+
 See the following resources to get you started:
 
 - [Contributing Guidelines](./docs/CONTRIBUTING.md)
