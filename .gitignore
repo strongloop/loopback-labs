@@ -7,6 +7,7 @@ coverage
 api-docs
 **/*.tgz
 packages/*/dist
+experimental/*/dist
 examples/*/dist
 benchmark/dist
 **/package
