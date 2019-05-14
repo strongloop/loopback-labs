@@ -4,27 +4,26 @@
 #
 # See https://help.github.com/articles/about-codeowners/
 
-* @bajtos @raymondfeng
+* @raymondfeng
 
-packages/authentication/* @bajtos @raymondfeng
+packages/authentication/* @raymondfeng
 packages/boot/* @raymondfeng @hacksparrow
-packages/booter-lb3app/* @bajtos @nabdelgadir
-packages/build/* @bajtos @raymondfeng
-packages/http-caching-proxy/* @bajtos
-packages/http-server/* @hacksparrow @bajtos
-packages/cli/* @raymondfeng @bajtos
-packages/context/* @bajtos @raymondfeng
-packages/core/* @bajtos @raymondfeng
+packages/booter-lb3app/* @nabdelgadir
+packages/build/* @raymondfeng
+packages/http-caching-proxy/*
+packages/http-server/* @hacksparrow
+packages/cli/* @raymondfeng
+packages/context/* @raymondfeng
+packages/core/* @raymondfeng
 packages/metadata/* @raymondfeng
-packages/openapi-spec-builder/* @bajtos @raymondfeng
-packages/openapi-v3/* @bajtos @jannyHou
-packages/openapi-v3-types/* @bajtos @jannyHou
+packages/openapi-spec-builder/* @raymondfeng
+packages/openapi-v3/* @jannyHou
+packages/openapi-v3-types/* @jannyHou
 packages/repository/* @raymondfeng
-packages/repository-json-schema/* @bajtos
-packages/rest/* @bajtos @raymondfeng
+packages/repository-json-schema/*
+packages/rest/* @raymondfeng
 packages/service-proxy/* @raymondfeng
-packages/testlab/* @bajtos
-examples/todo/* @bajtos @hacksparrow
+examples/todo/* @hacksparrow
 examples/express-composition/* @nabdelgadir
 examples/greeter-extension/* @raymondfeng
 examples/hello-world/* @b-admike
@@ -32,4 +31,4 @@ examples/lb3-application/* @bajtos @nabdelgadir
 examples/log-extension/* @hacksparrow
 examples/rpc-server/* @hacksparrow
 examples/soap-calculator/* @marioestradarosa
-docs/* @bajtos @raymondfeng @hacksparrow @b-admike @jannyHou
+docs/* @raymondfeng @hacksparrow @b-admike @jannyHou
