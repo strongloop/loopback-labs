@@ -13,6 +13,7 @@
         "examples/soap-calculator/package.json",
         "examples/todo-list/package.json",
         "examples/todo/package.json",
+        "experimental/graphql/package.json",
         "packages/authentication/package.json",
         "packages/boot/package.json",
         "packages/booter-lb3app/package.json",
@@ -36,6 +37,5 @@
         "sandbox/example/package.json"
       ]
     }
-  },
-  "ignore": ["@types/node"]
+  }
 }
