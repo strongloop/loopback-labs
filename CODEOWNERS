@@ -16,7 +16,9 @@ packages/cli/* @raymondfeng
 packages/context/* @raymondfeng
 packages/core/* @raymondfeng
 packages/metadata/* @raymondfeng
-packages/openapi-spec-builder/* @bajtos @raymondfeng
+packages/openapi-spec-builder/* @raymondfeng
+packages/openapi-v3/* @jannyHou	
+packages/openapi-v3-types/* @jannyHou
 packages/repository/* @raymondfeng
 packages/repository-json-schema/*
 packages/rest/* @raymondfeng
