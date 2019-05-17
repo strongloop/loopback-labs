@@ -17,7 +17,6 @@ packages/context/* @raymondfeng
 packages/core/* @raymondfeng
 packages/metadata/* @raymondfeng
 packages/openapi-spec-builder/* @bajtos @raymondfeng
-packages/passport-adapter/* @jannyHou @emonddr
 packages/repository/* @raymondfeng
 packages/repository-json-schema/*
 packages/rest/* @raymondfeng
@@ -30,4 +29,5 @@ examples/lb3-application/* @bajtos @nabdelgadir
 examples/log-extension/* @hacksparrow
 examples/rpc-server/* @hacksparrow
 examples/soap-calculator/* @marioestradarosa
+experimental/passport-adapter/* @jannyHou @emonddr
 docs/* @raymondfeng @hacksparrow @b-admike @jannyHou

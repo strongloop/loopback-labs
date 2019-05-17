@@ -3,6 +3,11 @@
 // import {AuthenticationStrategy} from '@loopback/authentication';
 import {AuthenticationStrategy, UserProfile} from '../../authentication';
 import {Request} from '../../rest';
+/**
+ * This is a mock passport adapter implementation.
+ * Created for exploring how to add the experimental feature.
+ * See story https://github.com/strongloop/loopback-next/issues/2676
+ */
 export class MockPassportAdapter implements AuthenticationStrategy{ 
   name: 'mock-passport-adapter';
   authenticate(request: Request): Promise<UserProfile | undefined> {
