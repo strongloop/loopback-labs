@@ -22,6 +22,11 @@ Two-way interactions can happen between `loopback-labs` and `loopback-next`.
 
 ![loopback-labs](./loopback-labs.png)
 
+## Create separate branch for each feature
+
+To keep an experimental feature fully isolated and make it easy to graduate into
+`loopback-next`, we should consider keep each of experimental features isolated in `loopback-labs@experimental/feature-1` branch.
+
 ## Workflow
 
 ### Work on an experimental feature in `@loopback-labs`
@@ -36,33 +41,30 @@ git remote add next git@github.com:strongloop/loopback-next.git
 
 2. Work on an experimental feature
 
-It follows the same process and flow as `loopback-next`:
+- Create a feature branch `experimental/feature-1`.
 
-- Create a feature branch
-- Make changes in the feature branch
-- Submit a PR against `loopback-labs@master`
+  ```sh
+  cd loopback-labs
+  git checkout -b experimental/feature-1
+  git push --force-with-lease
+  ```
 
-Please make sure changes to production packages
+- Start to add changes in a dev branch, like `experimental-dev/feature-1`.
 
-3. Pull in changes from `loopback-next@master`
+  ```sh
+  cd loopback-labs
+  git checkout -b experimental-dev/feature-1
+  // add some change
+  git add .
+  git commit -m '<your commit message>'
+  git push --force-with-lease
+  ```
+  
+- Create a PR from the dev branch `experimental-dev/feature-1` into feature branch `experimental/feature-1`.
+  
+- Team reviews the PR.
 
-```sh
-cd loopback-labs
-git checkout master
-git fetch --all
-git rebase next/master
-git push --force-with-lease
-```
-
-4. Rebase the experimental feature branch against master
-
-```
-cd loopback-labs
-git checkout experimental/feature-1
-git fetch --all
-git rebase origin/master
-git push --force-with-lease
-```
+3. Iterate step 2 until the new module is ready to graduate
 
 ### Graduate an experimental feature
 
@@ -85,41 +87,4 @@ git fetch --all
 // Move experimental modules from `experimental` to `packages`
 
 // Create a PR
-```
-
-## Questions
-
-- Do we merge experimental features into `loopback-labs@master` or keep each of
-  them isolated in `loopback-labs@labs/<my-experimental-feature>` branch?
-
-To keep an experimental feature fully isolated and make it easy to graduate into
-`loopback-next`, we should consider the following branching strategy illustrated
-by an experimental feature named `socketio`.
-
-1. Create an integration branch for SocketIO:
-
-```sh
-git checkout -b labs/socketio
-```
-
-2. Create a development branch for SocketIO:
-
-```sh
-git checkout -b experimental/socketio
-```
-
-3. Start to commit code into `experimental/socketio`
-
-4. Submit a PR against `labs/socketio`
-
-5. Merge the PR from `experimental/socketio` into `labs/socketio`
-
-6. Graduate `socketio` into `loopback-next`:
-
-```sh
-cd loopback-next
-git checkout -b feature/sockeio
-git fetch --all
-git rebase labs/labs/socketio
-git push
 ```
